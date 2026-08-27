@@ -1,3 +1,4 @@
+import type { ChapterReviewDetailResponse } from '../../src/beta-review/reviewTypes.js';
 import { Request, Response } from 'express';
 import { queryAll, queryOne, run, transaction } from '../db/database.js';
 import { buildApprovedChapter, checkAcceptedOverlaps, ApprovedVersionConflictError } from '../../src/beta-review/approvedVersion.js';
@@ -419,7 +420,7 @@ export const getChapterReviewDetail = async (req: Request, res: Response): Promi
     derivedChapterStatus = 'REVIEWED';
   }
 
-  res.json({
+  const response: ChapterReviewDetailResponse = {
     chapter: {
       id: chapter.id,
       index: chapter.chapter_index,
@@ -453,7 +454,8 @@ export const getChapterReviewDetail = async (req: Request, res: Response): Promi
       accepted: edits.filter((e) => e.reviewStatus === 'ACCEPTED').length,
       rejected: edits.filter((e) => e.reviewStatus === 'REJECTED').length,
     },
-  });
+  };
+  res.json(response);
 };
 
 /**

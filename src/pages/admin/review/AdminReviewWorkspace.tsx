@@ -4,11 +4,9 @@ import { BrandLogo } from '../../../components/common/BrandLogo';
 import { ErrorType, ERROR_TYPE_OPTIONS, ERROR_TYPE_LABELS } from '../../../beta-edit/editTypes';
 import {
   DerivedReviewStatus,
-  ChapterReviewStatus,
-  AcceptedRevisionItem,
-  ApprovedParagraphResult,
+  ChapterReviewDetailResponse,
 } from '../../../beta-review/reviewTypes';
-import { applyEditsToParagraph } from '../../../beta-edit/applyEdits';
+import { ReviewChapterContent } from './ReviewChapterContent';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -32,37 +30,6 @@ import {
   FileCheck,
 } from 'lucide-react';
 
-interface ChapterDetailData {
-  chapter: {
-    id: string;
-    bookId: string;
-    chapterIndex: number;
-    title: string;
-    wordCount: number;
-    paragraphs: string[];
-  };
-  assignment: {
-    id: string;
-    betaUserId: string;
-    betaUserName: string;
-    betaDisplayName: string;
-    isBetaCompleted: boolean;
-  };
-  edits: any[];
-  acceptedRevisionItems: AcceptedRevisionItem[];
-  approvedParagraphs: ApprovedParagraphResult[];
-  approvedConflict: any;
-  chapterReview: {
-    id: string;
-    status: 'IN_REVIEW' | 'APPROVED' | 'REOPENED';
-    approvedAt?: string;
-    reviewerDisplayName?: string;
-    reviewSnapshotVersion: number;
-    updatedAt: string;
-  } | null;
-  notes: any[];
-}
-
 interface AdminReviewWorkspaceProps {
   bookId: string;
   assignmentId?: string;
@@ -81,8 +48,8 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
   const [currentChapterIndex, setCurrentChapterIndex] = useState<number>(initialChapterIndex);
 
   const [isLoadingOverview, setIsLoadingOverview] = useState(true);
-  const [isLoadingChapter, setIsLoadingChapter] = useState(true);
-  const [chapterData, setChapterData] = useState<ChapterDetailData | null>(null);
+  const [isLoadingChapter, setIsLoadingChapter] = useState(false);
+  const [chapterData, setChapterData] = useState<ChapterReviewDetailResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Active view layer
@@ -108,6 +75,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
   const fetchOverview = async () => {
     try {
       setIsLoadingOverview(true);
+      setLoadError(null);
       const res = await api.get<any>(`/admin/books/${bookId}/review`);
       setBookOverview(res);
 
@@ -132,7 +100,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
     try {
       setIsLoadingChapter(true);
       setLoadError(null);
-      const res = await api.get<ChapterDetailData>(
+      const res = await api.get<ChapterReviewDetailResponse>(
         `/admin/books/${bookId}/assignments/${assignmentId}/chapters/${chapterIndex}/review`
       );
       setChapterData(res);
@@ -289,7 +257,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
     );
   }
 
-  const isChapterApproved = chapterData?.chapterReview?.status === 'APPROVED';
+  const isChapterApproved = chapterData?.chapter.derivedStatus === 'APPROVED';
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-ink-900 flex flex-col antialiased">
@@ -372,7 +340,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
             ) : (
               <button
                 onClick={() => setIsApproveModalOpen(true)}
-                disabled={chapterMetrics.pending > 0 || chapterMetrics.changes > 0}
+                disabled={!chapterData || isLoadingChapter || !!loadError || chapterMetrics.pending > 0 || chapterMetrics.changes > 0}
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-2xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs disabled:opacity-40 disabled:hover:bg-emerald-600 transition"
                 title={
                   chapterMetrics.pending > 0 || chapterMetrics.changes > 0
@@ -440,7 +408,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 ĐÃ PHÊ DUYỆT
               </span>
-            ) : chapterData?.chapterReview?.status === 'REOPENED' ? (
+            ) : chapterData?.chapter.derivedStatus === 'REOPENED' ? (
               <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 ĐÃ MỞ LẠI RÀ SOÁT
@@ -540,13 +508,13 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
           )}
 
           {/* Conflict Warning Banner if Approved Overlap detected */}
-          {contentLayer === 'approved' && chapterData?.approvedConflict && (
+          {contentLayer === 'approved' && chapterData?.approvedVersion.conflict && (
             <div className="p-4 rounded-3xl bg-rose-50 border border-rose-200 text-rose-950 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-bold text-sm">Xung đột chỉnh sửa được duyệt (APPROVED_EDIT_CONFLICT)</h4>
                 <p className="text-xs mt-1 text-rose-800">
-                  {chapterData.approvedConflict.message}
+                  {chapterData.approvedVersion.conflict.message}
                 </p>
                 <p className="text-xs mt-1 font-semibold text-rose-900">
                   Vui lòng từ chối một trong hai đề xuất để khôi phục tính nhất quán của bản thảo.
@@ -568,97 +536,17 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
                 <p className="text-sm font-bold">{loadError}</p>
               </div>
             ) : (
-              <article className="max-w-3xl mx-auto font-serif text-[17px] sm:text-[18px] text-[#2C2724] leading-[1.8] space-y-6">
-                <h2 className="font-sans font-bold text-xl sm:text-2xl text-ink-900 pb-4 border-b border-ink-100">
-                  {chapterData?.chapter.title || `Chương ${currentChapterIndex}`}
-                </h2>
-
-                {/* LAYER 1: WORKING VERSION (Bản Beta) */}
-                {contentLayer === 'working' &&
-                  chapterData?.chapter.paragraphs.map((pText, pIdx) => {
-                    const paraEdits = chapterData.edits.filter(
-                      (e) => e.paragraphIndex === pIdx && e.status === 'ACTIVE'
-                    );
-
-                    const segments = applyEditsToParagraph(pText, paraEdits);
-
-                    return (
-                      <p key={pIdx} className="relative">
-                        {segments.map((seg, sIdx) => {
-                          if (!seg.isEdited || !seg.edit) {
-                            return <React.Fragment key={sIdx}>{seg.text}</React.Fragment>;
-                          }
-
-                          const edit = seg.edit as any;
-                          const isSelected = selectedEdit?.id === edit.id;
-                          const revStatus: DerivedReviewStatus = edit.derivedReviewStatus || edit.reviewStatus || 'PENDING';
-
-                          let highlightClass = 'bg-purple-100/80 border-purple-400 text-purple-950';
-                          let dotColor = 'bg-purple-500';
-
-                          if (revStatus === 'ACCEPTED') {
-                            highlightClass = 'bg-emerald-100/80 border-emerald-500 text-emerald-950';
-                            dotColor = 'bg-emerald-600';
-                          } else if (revStatus === 'CHANGES_REQUESTED') {
-                            highlightClass = 'bg-amber-100/90 border-amber-500 text-amber-950';
-                            dotColor = 'bg-amber-500';
-                          } else if (revStatus === 'REJECTED') {
-                            highlightClass = 'bg-rose-100/60 border-rose-400 text-rose-900 line-through opacity-75';
-                            dotColor = 'bg-rose-500';
-                          }
-
-                          return (
-                            <span
-                              key={edit.id || sIdx}
-                              onClick={() => {
-                                setSelectedEdit(edit);
-                                setReviewAction(null);
-                                setReviewComment(edit.currentReview?.comment || '');
-                                setReviewError(null);
-                              }}
-                              className={`cursor-pointer px-1 py-0.5 rounded-lg border-b-2 font-medium transition select-text ${highlightClass} ${
-                                isSelected ? 'ring-2 ring-purple-600 ring-offset-2' : 'hover:opacity-90'
-                              }`}
-                              title={`Chỉnh sửa: ${edit.originalText} → ${edit.currentText} [${revStatus}]`}
-                            >
-                              {seg.text}
-                              <span
-                                className={`inline-block w-2 h-2 rounded-full ${dotColor} ml-1 align-middle`}
-                              />
-                            </span>
-                          );
-                        })}
-                      </p>
-                    );
-                  })}
-
-                {/* LAYER 2: APPROVED VERSION (Bản duyệt chính thức) */}
-                {contentLayer === 'approved' &&
-                  chapterData?.approvedParagraphs.map((para, pIdx) => (
-                    <p key={pIdx}>
-                      {para.segments.map((seg, sIdx) => {
-                        if (!seg.isApprovedEdit) {
-                          return <React.Fragment key={sIdx}>{seg.text}</React.Fragment>;
-                        }
-                        return (
-                          <span
-                            key={sIdx}
-                            className="bg-emerald-50 text-emerald-950 px-1 py-0.5 rounded-md border-b-2 border-emerald-400 font-medium"
-                            title={`Chỉnh sửa đã phê duyệt (Revision ${seg.revisionNumber})`}
-                          >
-                            {seg.text}
-                          </span>
-                        );
-                      })}
-                    </p>
-                  ))}
-
-                {/* LAYER 3: ORIGINAL (Nguyên tác) */}
-                {contentLayer === 'original' &&
-                  chapterData?.chapter.paragraphs.map((pText, pIdx) => (
-                    <p key={pIdx}>{pText}</p>
-                  ))}
-              </article>
+              chapterData ? <ReviewChapterContent
+                chapterData={chapterData}
+                contentLayer={contentLayer}
+                selectedEdit={selectedEdit}
+                onSelectEdit={(edit) => {
+                  setSelectedEdit(edit);
+                  setReviewAction(null);
+                  setReviewComment(edit.currentReview?.comment || '');
+                  setReviewError(null);
+                }}
+              /> : <p className="text-center text-ink-500 py-16">Chưa có phân công đọc duyệt cho tác phẩm này.</p>
             )}
           </div>
         </div>
@@ -1017,7 +905,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
               <button
                 type="button"
                 onClick={handleApproveChapter}
-                disabled={isApproving || chapterMetrics.pending > 0 || chapterMetrics.changes > 0}
+                disabled={!chapterData || isLoadingChapter || !!loadError || isApproving || chapterMetrics.pending > 0 || chapterMetrics.changes > 0}
                 className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs disabled:opacity-40 flex items-center gap-1.5 transition"
               >
                 {isApproving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}

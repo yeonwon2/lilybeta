@@ -97,3 +97,34 @@ export interface BookReviewStats {
   rejectedEdits: number;
   changesRequestedEdits: number;
 }
+
+/** Shared wire contract for GET /admin/books/:id/assignments/:assignmentId/chapters/:index/review. */
+export interface ChapterReviewDetailResponse {
+  chapter: {
+    id: string;
+    index: number;
+    title: string;
+    wordCount: number;
+    contentVersion: number;
+    contentHash?: string | null;
+    originalParagraphs: string[];
+    betaStatus: string;
+    isBetaCompleted: boolean;
+    derivedStatus: ChapterReviewStatus;
+    approvedAt: string | null;
+    approvedEditsCount: number;
+  };
+  assignment: {
+    id: string;
+    betaUserId: string;
+    betaUserName: string;
+    betaDisplayName: string;
+  };
+  edits: any[];
+  notes: any[];
+  approvedVersion: {
+    paragraphs: ApprovedParagraphResult[];
+    conflict: { message: string; editA: unknown; editB: unknown } | null;
+  };
+  counts: { total: number; pending: number; changesRequested: number; accepted: number; rejected: number };
+}

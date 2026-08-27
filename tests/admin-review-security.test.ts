@@ -1,3 +1,6 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ReviewChapterContent } from '../src/pages/admin/review/ReviewChapterContent.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
@@ -153,6 +156,17 @@ const runReviewSecurityTests = async () => {
     assert(reviewDetail.edits.length === 1, 'Review detail contains 1 edit');
     assert(reviewDetail.edits[0].derivedReviewStatus === 'PENDING', 'Edit derived review status is PENDING');
 
+    // Render the actual API response, not a hand-written fixture with different field names.
+    for (const contentLayer of ['working', 'approved', 'original'] as const) {
+      const html = renderToStaticMarkup(createElement(ReviewChapterContent, {
+        chapterData: reviewDetail, contentLayer, selectedEdit: null, onSelectEdit: () => {},
+      }));
+      assert(html.includes('Chương 1: Khởi Đầu'), `${contentLayer}: chapter title renders`);
+      assert(html.includes('Gió thổi qua rặng liễu ven hồ.'), `${contentLayer}: API paragraphs render without crashing`);
+      assert(html.includes(contentLayer === 'working' ? 'Chàng' : 'Hắn'), `${contentLayer}: correct original/proposed text`);
+    }
+
+
     // 6. Admin accepts Revision 1
     console.log('\n[Phase 6] Admin accepts Revision 1');
     const acceptRes = await fetch(`${baseUrl}/api/admin/edits/${edit1.id}/reviews`, {
@@ -201,6 +215,17 @@ const runReviewSecurityTests = async () => {
     });
     const approvedData2 = await approvedRes2.json();
     assert(approvedData2.paragraphs[0].startsWith('Chàng'), 'Approved Version strictly keeps Revision 1 text (Chàng)');
+    const updatedDetail = await (await fetch(
+      `${baseUrl}/api/admin/books/${book.id}/assignments/${assignment.id}/chapters/1/review`,
+      { headers: { Authorization: `Bearer ${adminToken}` } }
+    )).json();
+    for (const [contentLayer, expected] of [['working', 'Thiếu hiệp'], ['approved', 'Chàng'], ['original', 'Hắn']] as const) {
+      const html = renderToStaticMarkup(createElement(ReviewChapterContent, {
+        chapterData: updatedDetail, contentLayer, selectedEdit: null, onSelectEdit: () => {},
+      }));
+      assert(html.includes(expected), `${contentLayer}: UI uses correct revision from API response`);
+    }
+
     assert(!approvedData2.paragraphs[0].startsWith('Thiếu hiệp'), 'Unreviewed Revision 2 text is NOT in Approved Version');
 
     // 8. Stale Review Protection: Admin reviews with stale expectedEditVersion = 1
