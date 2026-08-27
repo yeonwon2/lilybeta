@@ -171,7 +171,11 @@ export class BetaCloudBookSource implements BookSource {
     updatedAt?: string;
   }>> {
     const res = await api.get<{ chapters: any[] }>(`/books/${bookId}/chapters`);
-    return res.chapters || [];
+    return (res.chapters || []).map((ch: any) => ({
+      ...ch,
+      index: ch.index ?? ch.chapterIndex,
+      chapterIndex: ch.chapterIndex ?? ch.index,
+    }));
   }
 
   /**

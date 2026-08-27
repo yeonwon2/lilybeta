@@ -196,6 +196,12 @@ export class PostgresAdapter implements DatabaseAdapter {
     this.pool.on('error', (err) => {
       console.error('[PostgreSQL Pool Error]', err.message);
     });
+
+    if (this.schema) {
+      this.pool.on('connect', (client) => {
+        client.query(`SET search_path TO "${this.schema}", public`);
+      });
+    }
   }
 
   private getRunner(): pg.Pool | pg.PoolClient {

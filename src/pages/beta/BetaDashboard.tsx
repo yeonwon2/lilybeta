@@ -51,11 +51,15 @@ export const BetaDashboard: React.FC<BetaDashboardProps> = ({ onSelectBook }) =>
     let totalChapters = 0;
     let completedChapters = 0;
     books.forEach(b => {
+      const bCompleted = b.completedChaptersCount ?? b.progress?.completedChaptersCount ?? 0;
       totalChapters += b.totalChapters || 0;
-      completedChapters += b.completedChaptersCount || 0;
+      completedChapters += bCompleted;
     });
     const percent = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
-    const completedBooks = books.filter(b => b.completedChaptersCount === b.totalChapters && b.totalChapters > 0).length;
+    const completedBooks = books.filter(b => {
+      const bCompleted = b.completedChaptersCount ?? b.progress?.completedChaptersCount ?? 0;
+      return bCompleted === b.totalChapters && b.totalChapters > 0;
+    }).length;
 
     return { totalChapters, completedChapters, percent, completedBooks };
   }, [books]);
@@ -174,8 +178,10 @@ export const BetaDashboard: React.FC<BetaDashboardProps> = ({ onSelectBook }) =>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {books.map((b) => {
-              const isCompleted = b.completedChaptersCount === b.totalChapters && b.totalChapters > 0;
-              const currentChapterNum = b.currentChapter || 1;
+              const bCompleted = b.completedChaptersCount ?? b.progress?.completedChaptersCount ?? 0;
+              const bProgress = b.progressPercent ?? b.progress?.progressPercent ?? 0;
+              const isCompleted = bCompleted === b.totalChapters && b.totalChapters > 0;
+              const currentChapterNum = b.currentChapter ?? b.progress?.currentChapter ?? 1;
 
               return (
                 <div
@@ -223,10 +229,10 @@ export const BetaDashboard: React.FC<BetaDashboardProps> = ({ onSelectBook }) =>
                       <div className="pt-2 space-y-1.5">
                         <div className="flex justify-between text-[11px]">
                           <span className="text-ink-500">
-                            Tiến độ: <strong className="text-ink-900 font-mono">{b.completedChaptersCount || 0}/{b.totalChapters}</strong> chương
+                            Tiến độ: <strong className="text-ink-900 font-mono">{bCompleted}/{b.totalChapters}</strong> chương
                           </span>
                           <span className="font-mono font-bold text-purple-900">
-                            {Math.round(b.progressPercent || 0)}%
+                            {Math.round(bProgress)}%
                           </span>
                         </div>
                         <div className="w-full h-1.5 bg-ink-100 rounded-full overflow-hidden">
@@ -234,7 +240,9 @@ export const BetaDashboard: React.FC<BetaDashboardProps> = ({ onSelectBook }) =>
                             className={`h-full rounded-full transition-all duration-300 ${
                               isCompleted ? 'bg-emerald-600' : 'bg-purple-700'
                             }`}
-                            style={{ width: `${Math.min(100, Math.max(0, b.progressPercent || 0))}%` }}
+                            style={{
+                              width: `${Math.min(100, Math.max(0, bProgress))}%`,
+                            }}
                           />
                         </div>
                       </div>

@@ -46,6 +46,12 @@ export interface Book {
   progressPercent?: number;
   completedChaptersCount?: number;
   lastReadAt?: string;
+  progress?: {
+    currentChapter?: number;
+    progressPercent?: number;
+    completedChaptersCount?: number;
+    lastReadAt?: string;
+  } | null;
 
   // Assignment info
   assignments?: BookAssignmentInfo[];

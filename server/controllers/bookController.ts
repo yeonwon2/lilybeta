@@ -44,7 +44,7 @@ export const listBooks = async (req: Request, res: Response): Promise<void> => {
       COALESCE(ap.completed_chapters_count, 0) AS completedChaptersCount,
       ap.last_read_at AS lastReadAt
     FROM beta_books b
-    INNER JOIN beta_assignments ba ON ba.book_id = b.id AND ba.status = 'ACTIVE'
+    INNER JOIN beta_assignments ba ON ba.book_id = b.id AND ba.status IN ('ACTIVE', 'COMPLETED')
     LEFT JOIN beta_assignment_progress ap ON ap.assignment_id = ba.id
     WHERE ba.beta_user_id = ?
     ORDER BY ba.assigned_at DESC
@@ -110,6 +110,10 @@ export const getBook = async (req: Request, res: Response): Promise<void> => {
   res.json({
     book: {
       ...book,
+      currentChapter: progress?.currentChapter || 1,
+      progressPercent: progress?.progressPercent || 0,
+      completedChaptersCount: progress?.completedChaptersCount || 0,
+      lastReadAt: progress?.lastReadAt || null,
       progress: progress || null,
     },
   });
@@ -117,21 +121,28 @@ export const getBook = async (req: Request, res: Response): Promise<void> => {
 
 export const getChapterList = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
+  const user = req.user;
 
-  // Lean TOC query: excludes paragraphs payload to save network egress
+  // Lean TOC query: excludes paragraphs payload to save network egress, but joins status for current user if available
   const chapters = await queryAll<any>(`
     SELECT 
       c.id,
       c.chapter_index AS chapterIndex,
+      c.chapter_index AS "index",
       c.title,
       c.word_count AS wordCount,
       c.content_version AS contentVersion,
       c.content_hash AS contentHash,
-      c.updated_at AS updatedAt
+      c.updated_at AS updatedAt,
+      COALESCE(cs.status, 'NOT_STARTED') AS status,
+      cs.started_at AS startedAt,
+      cs.completed_at AS completedAt,
+      cs.last_scroll_percent AS lastScrollPercent
     FROM beta_chapters c
+    LEFT JOIN beta_chapter_status cs ON cs.book_id = c.book_id AND cs.chapter_index = c.chapter_index AND cs.beta_user_id = ?
     WHERE c.book_id = ?
     ORDER BY c.chapter_index ASC
-  `, id);
+  `, user?.id || null, id);
 
   res.json({ chapters });
 };
@@ -220,12 +231,11 @@ export const getChapter = async (req: Request, res: Response): Promise<void> => 
 
   const now = new Date().toISOString();
 
-  // Find active assignment
+  // Find active or completed assignment
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   let chapterWorkflowStatus = 'NOT_STARTED';
@@ -377,12 +387,11 @@ export const saveProgress = async (req: Request, res: Response): Promise<void> =
   const { chapterIndex, percentage, scrollPercent, scrollOffset } = req.body;
   const user = req.user!;
 
-  // 1. Validate active assignment strictly (NO fallback!)
+  // 1. Validate assignment strictly (NO fallback!)
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment) {
@@ -492,10 +501,9 @@ export const completeChapter = async (req: Request, res: Response): Promise<void
 
   // 1. Verify user assignment strictly
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment) {
@@ -569,7 +577,7 @@ export const completeChapter = async (req: Request, res: Response): Promise<void
       `SELECT COUNT(id) AS count FROM beta_chapter_status WHERE assignment_id = ? AND status = 'COMPLETED'`,
       assignment.id
     );
-    completedCount = countRes?.count || 1;
+    completedCount = parseInt(String(countRes?.count || 0), 10);
     overallPercentage = Math.min(100, Math.round((completedCount / totalChapters) * 1000) / 10);
 
     // 5. Update book-level progress
@@ -643,10 +651,9 @@ export const getChapterWorkflow = async (req: Request, res: Response): Promise<v
   const user = req.user!;
 
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment) {

@@ -100,8 +100,10 @@ export const BetaBookDetail: React.FC<BetaBookDetailProps> = ({ bookId, onBack, 
     );
   }
 
-  const currentChapterIndex = book.currentChapter || 1;
-  const isAllDone = book.completedChaptersCount === book.totalChapters && book.totalChapters > 0;
+  const currentChapterIndex = book.currentChapter ?? book.progress?.currentChapter ?? 1;
+  const completedCount = book.completedChaptersCount ?? book.progress?.completedChaptersCount ?? 0;
+  const progressPercent = book.progressPercent ?? book.progress?.progressPercent ?? 0;
+  const isAllDone = completedCount === book.totalChapters && book.totalChapters > 0;
 
   return (
     <div className="min-h-screen bg-[#FBF9F5] text-ink-900 flex flex-col font-sans">
@@ -149,20 +151,20 @@ export const BetaBookDetail: React.FC<BetaBookDetailProps> = ({ bookId, onBack, 
             {/* Progress status */}
             <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-ink-100 space-y-2.5">
               <div className="flex justify-between text-xs text-ink-600">
-                <span>Tiến độ đọc duyệt: <strong className="text-purple-900 font-mono">{book.completedChaptersCount || 0}/{book.totalChapters} chương</strong></span>
+                <span>Tiến độ đọc duyệt: <strong className="text-purple-900 font-mono">{completedCount}/{book.totalChapters} chương</strong></span>
                 <span className="font-mono font-bold text-purple-900">
-                  {Math.round(book.progressPercent || 0)}%
+                  {Math.round(progressPercent)}%
                 </span>
               </div>
               <div className="w-full h-2 bg-ink-200/60 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${isAllDone ? 'bg-emerald-600' : 'bg-purple-900'}`}
-                  style={{ width: `${Math.min(100, Math.max(0, book.progressPercent || 0))}%` }}
+                  style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
                 />
               </div>
               <div className="flex items-center justify-between text-[11px] text-ink-400 pt-1 font-mono">
-                <span>Đã xong: <strong className="text-emerald-700">{book.completedChaptersCount || 0} chương</strong></span>
-                <span>Còn lại: <strong className="text-ink-700">{Math.max(0, book.totalChapters - (book.completedChaptersCount || 0))} chương</strong></span>
+                <span>Đã xong: <strong className="text-emerald-700">{completedCount} chương</strong></span>
+                <span>Còn lại: <strong className="text-ink-700">{Math.max(0, book.totalChapters - completedCount)} chương</strong></span>
               </div>
             </div>
 
@@ -172,7 +174,7 @@ export const BetaBookDetail: React.FC<BetaBookDetailProps> = ({ bookId, onBack, 
               className="inline-flex items-center gap-2 px-6 py-3 bg-purple-900 hover:bg-purple-950 text-white rounded-2xl text-xs font-semibold shadow-xs transition transform hover:scale-[1.01] active:scale-[0.99]"
             >
               <Play className="w-4 h-4 fill-current" />
-              <span>{book.progressPercent && book.progressPercent > 0 ? `Đọc tiếp Chương ${currentChapterIndex}` : 'Bắt đầu đọc từ Chương 1'}</span>
+              <span>{progressPercent > 0 ? `Đọc tiếp Chương ${currentChapterIndex}` : 'Bắt đầu đọc từ Chương 1'}</span>
             </button>
           </div>
         </div>
@@ -189,20 +191,21 @@ export const BetaBookDetail: React.FC<BetaBookDetailProps> = ({ bookId, onBack, 
 
           <div className="divide-y divide-ink-100/70 text-xs">
             {chapters.map((ch) => {
-              const isCurrent = ch.index === currentChapterIndex;
+              const chIdx = ch.index ?? ch.chapterIndex ?? 1;
+              const isCurrent = chIdx === currentChapterIndex;
               const isCompleted = ch.status === 'COMPLETED';
 
               return (
                 <div
-                  key={ch.index}
-                  onClick={() => onOpenChapter(ch.index)}
+                  key={chIdx}
+                  onClick={() => onOpenChapter(chIdx)}
                   className={`p-4 sm:px-6 flex items-center justify-between cursor-pointer transition ${
                     isCurrent ? 'bg-purple-50/70' : 'hover:bg-[#FAF8F5]'
                   }`}
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <span className="font-mono text-xs text-ink-400 w-7 shrink-0">
-                      #{ch.index}
+                      #{chIdx}
                     </span>
                     <span className={`line-clamp-1 ${isCurrent ? 'text-purple-950 font-bold font-serif' : 'text-ink-800 font-medium'}`}>
                       {ch.title}

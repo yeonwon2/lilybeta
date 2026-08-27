@@ -44,12 +44,11 @@ export const listChapterEdits = async (req: Request, res: Response): Promise<voi
     return;
   }
 
-  // Beta Reader: strictly own active assignment
+  // Beta Reader: strictly own assignment
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment) {
@@ -86,10 +85,9 @@ export const createEdit = async (req: Request, res: Response): Promise<void> => 
 
   // 1. Resolve active assignment
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment) {
@@ -323,10 +321,9 @@ export const updateEdit = async (req: Request, res: Response): Promise<void> => 
   const { proposedText, errorType, reason, expectedVersion } = req.body;
 
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment) {
@@ -475,17 +472,16 @@ export const updateEdit = async (req: Request, res: Response): Promise<void> => 
 };
 
 /**
- * Soft-delete / revert an edit.
+ * Revert / Delete an edit (marks status = 'REVERTED').
  */
 export const deleteEdit = async (req: Request, res: Response): Promise<void> => {
   const { id, editId } = req.params;
   const user = req.user!;
 
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment) {
@@ -590,10 +586,9 @@ export const listChapterNotes = async (req: Request, res: Response): Promise<voi
   const chapterNum = parseInt(String(index), 10);
 
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment && user.role !== 'ADMIN') {
@@ -631,10 +626,9 @@ export const createNote = async (req: Request, res: Response): Promise<void> => 
   const { paragraphIndex, startOffset, endOffset, selectedText, note } = req.body;
 
   const assignment = await queryOne<any>(
-    'SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status = ?',
+    "SELECT id FROM beta_assignments WHERE book_id = ? AND beta_user_id = ? AND status IN ('ACTIVE', 'COMPLETED')",
     id,
-    user.id,
-    'ACTIVE'
+    user.id
   );
 
   if (!assignment) {
