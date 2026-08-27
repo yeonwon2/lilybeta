@@ -418,7 +418,7 @@ const runPostgresParityTests = async () => {
     });
     assert(getProgressRes.status === 200, '[N] Progress Save: GET progress returns 200 OK');
     const progressData = await getProgressRes.json();
-    assert(progressData.progress.currentChapterIndex === 1, '[N] Progress Save: Progress records current chapter index 1');
+    assert(progressData.progress?.chapterIndex === 1, '[N] Progress Save: Progress records current chapter index 1');
 
     // Delta-Write baseline snapshot: capture beta_chapters & beta_books row timestamps
     const preChapterRow = await testPgAdapter.queryOne<any>('SELECT updated_at, paragraphs FROM beta_chapters WHERE book_id = ? AND chapter_index = 1', book.id);

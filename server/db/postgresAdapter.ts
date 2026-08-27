@@ -125,6 +125,20 @@ export function translatePlaceholders(sql: string): string {
       continue;
     }
 
+    // 7. Auto-quote unquoted camelCase alias after AS: AS myColumn -> AS "myColumn"
+    if ((ch === 'A' || ch === 'a') && (i + 1 < len && (sql[i + 1] === 'S' || sql[i + 1] === 's')) && (i === 0 || /[\s)]/.test(sql[i - 1]))) {
+      const rest = sql.slice(i);
+      const asMatch = rest.match(/^(AS\s+)([a-zA-Z_][a-zA-Z0-9_]*)/i);
+      if (asMatch) {
+        const alias = asMatch[2];
+        if (/[A-Z]/.test(alias) && /[a-z]/.test(alias)) {
+          result += `${asMatch[1]}"${alias}"`;
+          i += asMatch[0].length;
+          continue;
+        }
+      }
+    }
+
     // Default: normal character
     result += ch;
     i++;
