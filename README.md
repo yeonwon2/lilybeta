@@ -170,3 +170,9 @@ Theo đúng tôn chỉ kiến trúc, các tính năng sau **không** nằm trong
 ## Phase 5.5 — Editor Sync (additive, optional)
 
 Manual upload/import and all existing Beta/Review/Approve workflows remain available without Editor configuration. The new integration uses separate mapping tables and server-only credentials. See [contract, safety rules, setup and verification](docs/phase-5.5-editor-sync.md). No automatic replacement of manuscripts with existing Beta work is allowed.
+
+### Mở như app trên điện thoại
+
+Mở LilyBeta bằng Safari (iPhone) hoặc Chrome (Android), chọn **Thêm vào màn hình chính / Cài đặt ứng dụng**, rồi mở từ icon LilyBeta. Manifest dùng `standalone` để không hiển thị thanh địa chỉ trong cửa sổ đã cài; tab trình duyệt thông thường vẫn có thanh địa chỉ. Nếu đã tạo shortcut trước bản cập nhật, thêm lại icon để nhận cấu hình mới (không xóa dữ liệu trang web/bản nháp).
+
+Giao diện dùng chiều cao viewport ổn định và ô nhập tối thiểu 16px trên mobile để hạn chế tự zoom. Vẫn giữ pinch zoom và chọn chữ cho khả năng đọc/hiệu đính. Không thêm service worker/cache API: việc cài ra màn hình chính không làm thay đổi đồng bộ, đăng nhập hay cơ chế lưu bản nháp hiện tại, và không đồng nghĩa toàn bộ app hoạt động offline. Cần kiểm tra cài đặt/keyboard trên thiết bị iOS và Android thật sau rollout.
