@@ -23,6 +23,11 @@ async function initServerless() {
 }
 
 export default async function handler(req: Request, res: Response) {
-  const app = await initServerless();
-  return app(req, res);
+  try {
+    const app = await initServerless();
+    return app(req, res);
+  } catch (err) {
+    console.error('[Vercel Serverless] Startup failed:', err);
+    res.status(503).json({ error: 'Máy chủ chưa sẵn sàng. Vui lòng thử lại.', code: 'STARTUP_FAILED' });
+  }
 }

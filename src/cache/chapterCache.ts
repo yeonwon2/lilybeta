@@ -67,15 +67,25 @@ class MemoryChapterCacheStore {
 
 const memoryStore = new MemoryChapterCacheStore();
 
+// A local cache is optional: blocked IndexedDB must never block reading.
+const withCacheTimeout = <T>(operation: Promise<T>): Promise<T> => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => reject(new Error('Chapter cache timed out')), 1000);
+  operation.then(resolve, reject).finally(() => clearTimeout(timer));
+});
+
 class IndexedDBChapterCacheStore {
   private dbPromise: Promise<IDBDatabase> | null = null;
 
   private openDB(): Promise<IDBDatabase> {
     if (this.dbPromise) return this.dbPromise;
 
-    this.dbPromise = new Promise((resolve, reject) => {
+    const opening = new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
-
+      let abandoned = false;
+      const timer = setTimeout(() => {
+        abandoned = true;
+        reject(new Error('Chapter cache opening timed out'));
+      }, 1000);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -85,12 +95,24 @@ class IndexedDBChapterCacheStore {
           store.createIndex('by_cached_at', 'cachedAt', { unique: false });
         }
       };
-
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => {
-        this.dbPromise = null;
-        reject(request.error);
+      request.onsuccess = () => {
+        clearTimeout(timer);
+        const db = request.result;
+        if (abandoned) { db.close(); return; }
+        db.onversionchange = () => { db.close(); this.dbPromise = null; };
+        resolve(db);
       };
+      const fail = (error: Error | DOMException) => {
+        clearTimeout(timer);
+        abandoned = true;
+        reject(error);
+      };
+      request.onerror = () => fail(request.error || new Error('Chapter cache opening failed'));
+      request.onblocked = () => fail(new Error('Chapter cache opening blocked'));
+    });
+    this.dbPromise = opening.catch(err => {
+      this.dbPromise = null;
+      throw err;
     });
 
     return this.dbPromise;
@@ -99,7 +121,7 @@ class IndexedDBChapterCacheStore {
   async get(key: string): Promise<CachedChapter | null> {
     try {
       const db = await this.openDB();
-      return new Promise((resolve, reject) => {
+      return await withCacheTimeout(new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readonly');
         const store = tx.objectStore(STORE_NAME);
         const req = store.get(key);
@@ -112,7 +134,8 @@ class IndexedDBChapterCacheStore {
           resolve(data as CachedChapter);
         };
         req.onerror = () => reject(req.error);
-      });
+        tx.onabort = () => reject(tx.error || new Error('Chapter cache transaction aborted'));
+      }));
     } catch (err) {
       console.warn('[ChapterCache] IndexedDB get error, fallback to memory:', err);
       return memoryStore.get(key);
@@ -122,14 +145,15 @@ class IndexedDBChapterCacheStore {
   async set(key: string, chapter: CachedChapter): Promise<void> {
     try {
       const db = await this.openDB();
-      return new Promise((resolve, reject) => {
+      return await withCacheTimeout(new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         const record = { ...chapter, cacheKey: key };
         const req = store.put(record);
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
-      });
+        tx.onabort = () => reject(tx.error || new Error('Chapter cache transaction aborted'));
+      }));
     } catch (err) {
       console.warn('[ChapterCache] IndexedDB set error, fallback to memory:', err);
       return memoryStore.set(key, chapter);
@@ -139,13 +163,14 @@ class IndexedDBChapterCacheStore {
   async delete(key: string): Promise<void> {
     try {
       const db = await this.openDB();
-      return new Promise((resolve, reject) => {
+      return await withCacheTimeout(new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         const req = store.delete(key);
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
-      });
+        tx.onabort = () => reject(tx.error || new Error('Chapter cache transaction aborted'));
+      }));
     } catch (err) {
       return memoryStore.delete(key);
     }
@@ -154,7 +179,7 @@ class IndexedDBChapterCacheStore {
   async clearBook(userId: string, bookId: string): Promise<void> {
     try {
       const db = await this.openDB();
-      return new Promise((resolve, reject) => {
+      return await withCacheTimeout(new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         const index = store.index('by_user_book');
@@ -170,7 +195,8 @@ class IndexedDBChapterCacheStore {
           }
         };
         req.onerror = () => reject(req.error);
-      });
+        tx.onabort = () => reject(tx.error || new Error('Chapter cache transaction aborted'));
+      }));
     } catch {
       return memoryStore.clearBook(userId, bookId);
     }
@@ -182,7 +208,7 @@ class IndexedDBChapterCacheStore {
       const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
       let deleted = 0;
 
-      return new Promise((resolve, reject) => {
+      return await withCacheTimeout(new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         const index = store.index('by_cached_at');
@@ -200,7 +226,8 @@ class IndexedDBChapterCacheStore {
           }
         };
         req.onerror = () => reject(req.error);
-      });
+        tx.onabort = () => reject(tx.error || new Error('Chapter cache transaction aborted'));
+      }));
     } catch {
       return memoryStore.prune(maxAgeDays, maxEntries);
     }
@@ -209,13 +236,14 @@ class IndexedDBChapterCacheStore {
   async clearAll(): Promise<void> {
     try {
       const db = await this.openDB();
-      return new Promise((resolve, reject) => {
+      return await withCacheTimeout(new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         const req = store.clear();
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
-      });
+        tx.onabort = () => reject(tx.error || new Error('Chapter cache transaction aborted'));
+      }));
     } catch {
       return memoryStore.clearAll();
     }
@@ -225,9 +253,11 @@ class IndexedDBChapterCacheStore {
 const idbStore = new IndexedDBChapterCacheStore();
 
 const getBackendStore = () => {
-  if (typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined') {
-    return idbStore;
-  }
+  try {
+    if (typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined') {
+      return idbStore;
+    }
+  } catch { /* Storage access can be denied by browser policy. */ }
   return memoryStore;
 };
 

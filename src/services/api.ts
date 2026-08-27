@@ -14,60 +14,79 @@ export class ApiError extends Error {
   }
 }
 
-class ApiClient {
+export class ApiClient {
   private baseUrl = '/api';
+  private memoryToken: string | null = null;
+  private hasMemoryOverride = false;
+
+  constructor(private timeoutMs = 20_000) {}
 
   public getToken(): string | null {
-    if (typeof localStorage === 'undefined') return null;
-    return localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (this.hasMemoryOverride) return this.memoryToken;
+    try {
+      this.memoryToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+    } catch {
+      // Storage may be unavailable in private mode or blocked by browser policy.
+    }
+    return this.memoryToken;
   }
 
   public setToken(token: string | null): void {
-    if (typeof localStorage === 'undefined') return;
-    if (token) {
-      localStorage.setItem(TOKEN_STORAGE_KEY, token);
-    } else {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
+    this.memoryToken = token;
+    try {
+      if (token) localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      else localStorage.removeItem(TOKEN_STORAGE_KEY);
+      this.hasMemoryOverride = false;
+    } catch {
+      // Keep this session usable even when persistence is unavailable.
+      this.hasMemoryOverride = true;
     }
   }
 
   public clearToken(): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-    }
+    this.setToken(null);
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const token = this.getToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
+    const headers = new Headers(options.headers);
+    headers.set('Content-Type', 'application/json');
+    if (token) headers.set('Authorization', `Bearer ${token}`);
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    const controller = new AbortController();
+    // Book imports may upload and persist thousands of chapters.
+    const timeout = options.method === 'POST' && path === '/admin/books' ? 120_000 : this.timeoutMs;
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
+      if (response.status === 204) return undefined as T;
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new ApiError('Máy chủ trả về dữ liệu không hợp lệ. Vui lòng thử lại.', response.ok ? 502 : response.status, 'INVALID_RESPONSE');
+      }
+      let data: any;
+      try {
+        data = await response.json();
+      } catch (err) {
+        if (controller.signal.aborted) throw err;
+        throw new ApiError('Không thể đọc phản hồi từ máy chủ. Vui lòng thử lại.', 502, 'INVALID_RESPONSE');
+      }
+      if (!response.ok) {
+        throw new ApiError(data?.error || response.statusText, response.status, data?.code);
+      }
+      return data as T;
+    } catch (err) {
+      if (controller.signal.aborted) {
+        throw new ApiError('Máy chủ phản hồi quá lâu. Vui lòng thử lại. Nếu vừa lưu dữ liệu, hãy kiểm tra trạng thái trước khi gửi lại.', 408, 'REQUEST_TIMEOUT');
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
     }
-
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      ...options,
-      headers,
-    });
-
-    let data: any = null;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      data = await response.text();
-    }
-
-    if (!response.ok) {
-      const errorMessage = (typeof data === 'object' && data?.error) ? data.error : response.statusText;
-      const errorCode = typeof data === 'object' ? data?.code : undefined;
-      throw new ApiError(errorMessage, response.status, errorCode);
-    }
-
-    return data as T;
   }
 
   public get<T>(path: string, options?: { dedupe?: boolean }): Promise<T> {

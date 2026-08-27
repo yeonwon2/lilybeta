@@ -6,6 +6,14 @@ import { config, validateConfig, sanitizeDatabaseUrl } from '../config.js';
 
 export const runPostgresMigrations = async (customAdapter?: PostgresAdapter): Promise<void> => {
   const adapter = customAdapter || new PostgresAdapter();
+  try {
+    await applyPostgresMigrations(adapter);
+  } finally {
+    if (!customAdapter) await adapter.close();
+  }
+};
+
+const applyPostgresMigrations = async (adapter: PostgresAdapter): Promise<void> => {
 
   console.log(`[LilyBeta PostgreSQL] Connecting to ${sanitizeDatabaseUrl(config.databaseUrl)}...`);
   console.log('[LilyBeta PostgreSQL] Initializing versioned migration engine...');
@@ -131,7 +139,4 @@ export const runPostgresMigrations = async (customAdapter?: PostgresAdapter): Pr
     }
   }
 
-  if (!customAdapter) {
-    await adapter.close();
-  }
 };

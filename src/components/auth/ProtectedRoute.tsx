@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ShieldAlert, Loader2 } from 'lucide-react';
 import { UserRole } from '../../types';
@@ -18,6 +18,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
 
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !user)) onRedirectToLogin();
+  }, [isLoading, isAuthenticated, user, onRedirectToLogin]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
@@ -30,7 +34,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!isAuthenticated || !user) {
-    onRedirectToLogin();
     return null;
   }
 

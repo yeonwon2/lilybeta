@@ -6,10 +6,11 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  sessionError: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isBetaReader: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -21,7 +22,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(() => api.getToken());
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const [sessionError, setSessionError] = useState<string | null>(null);
+
   const refreshUser = async () => {
+    setIsLoading(true);
+    setSessionError(null);
     const currentToken = api.getToken();
     if (!currentToken) {
       setUser(null);
@@ -36,9 +41,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setToken(currentToken);
     } catch (err: any) {
       console.warn('[Auth] Session restore failed:', err?.message);
-      api.clearToken();
-      setUser(null);
-      setToken(null);
+      if (err instanceof ApiError && err.status === 401) {
+        api.clearToken();
+        setUser(null);
+        setToken(null);
+      } else {
+        setSessionError(err?.message || 'Không thể kết nối máy chủ. Vui lòng thử lại.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -49,15 +58,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (username: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const res = await api.post<{ token: string; user: User }>('/auth/login', { username, password });
-      api.setToken(res.token);
-      setToken(res.token);
-      setUser(res.user);
-    } finally {
-      setIsLoading(false);
-    }
+    const res = await api.post<{ token: string; user: User }>('/auth/login', { username, password });
+    api.setToken(res.token);
+    setToken(res.token);
+    setUser(res.user);
+    setSessionError(null);
+    return res.user;
   };
 
   const logout = async () => {
@@ -82,6 +88,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         token,
         isLoading,
+        sessionError,
         isAuthenticated,
         isAdmin,
         isBetaReader,

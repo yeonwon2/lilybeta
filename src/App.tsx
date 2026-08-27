@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
-import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { AdminReviewWorkspace } from './pages/admin/review/AdminReviewWorkspace';
-import { BetaDashboard } from './pages/beta/BetaDashboard';
-import { BetaBookDetail } from './pages/beta/BetaBookDetail';
-import { BetaReaderView } from './pages/beta/BetaReaderView';
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminReviewWorkspace = lazy(() => import('./pages/admin/review/AdminReviewWorkspace').then(m => ({ default: m.AdminReviewWorkspace })));
+const BetaDashboard = lazy(() => import('./pages/beta/BetaDashboard').then(m => ({ default: m.BetaDashboard })));
+const BetaBookDetail = lazy(() => import('./pages/beta/BetaBookDetail').then(m => ({ default: m.BetaBookDetail })));
+const BetaReaderView = lazy(() => import('./pages/beta/BetaReaderView').then(m => ({ default: m.BetaReaderView })));
 
 export const AppContent: React.FC = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, sessionError, refreshUser } = useAuth();
   const [currentPath, setCurrentPath] = useState<string>(() => window.location.pathname || '/');
 
   // Handle browser back/forward buttons
@@ -29,7 +29,7 @@ export const AppContent: React.FC = () => {
 
   // Redirect root based on auth status and role
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !sessionError) {
       if (!isAuthenticated) {
         if (currentPath !== '/login') {
           navigate('/login');
@@ -42,12 +42,22 @@ export const AppContent: React.FC = () => {
         }
       }
     }
-  }, [isLoading, isAuthenticated, user?.role, currentPath]);
+  }, [isLoading, isAuthenticated, user?.role, currentPath, sessionError]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
         <div className="w-8 h-8 rounded-full border-2 border-lily-600 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (sessionError) {
+    return (
+      <div role="alert" className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <h1 className="font-bold">Không thể khôi phục phiên đăng nhập</h1>
+        <p>{sessionError}</p>
+        <button className="px-4 py-2 rounded-xl bg-purple-900 text-white" onClick={() => void refreshUser()}>Thử lại</button>
       </div>
     );
   }
@@ -151,7 +161,9 @@ export const AppContent: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <Suspense fallback={<div role="status" className="min-h-screen flex items-center justify-center">Đang tải trang...</div>}>
+        <AppContent />
+      </Suspense>
     </AuthProvider>
   );
 };

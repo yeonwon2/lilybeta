@@ -24,17 +24,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      await login(username.trim(), password);
-      // Determine destination in callback based on role via AuthContext
-      const token = localStorage.getItem('lilybeta_token');
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          onLoginSuccess(payload.role || 'BETA_READER');
-        } catch {
-          onLoginSuccess('BETA_READER');
-        }
-      }
+      const user = await login(username.trim(), password);
+      onLoginSuccess(user.role);
     } catch (err: any) {
       setError(err?.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.');
     } finally {

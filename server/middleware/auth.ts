@@ -58,7 +58,11 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
     next();
   } catch (err) {
-    res.status(401).json({ error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn' });
+    if (err instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn' });
+    } else {
+      next(err);
+    }
   }
 };
 

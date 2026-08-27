@@ -130,7 +130,7 @@ export class BetaCloudBookSource implements BookSource {
 
       if (serverChapter) {
         // Save to IndexedDB cache
-        await ChapterCache.setCachedChapter({
+        void ChapterCache.setCachedChapter({
           userId: effectiveUserId,
           bookId,
           chapterId: serverChapter.id,
@@ -142,7 +142,7 @@ export class BetaCloudBookSource implements BookSource {
           contentHash: serverChapter.contentHash,
           updatedAt: serverChapter.updatedAt || new Date().toISOString(),
           cachedAt: Date.now(),
-        });
+        }).catch(err => console.warn('[ChapterCache] Could not cache chapter:', err));
       }
 
       return serverChapter;
