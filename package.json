@@ -22,8 +22,10 @@
     "test:egress": "tsx tests/egress-optimization.test.ts",
     "test:readiness": "tsx tests/readiness.test.ts",
     "test:postgres": "tsx tests/postgres-parity.test.ts",
-    "test": "npm run test:security && npm run test:renderer && npm run test:migrations && npm run test:drafts && npm run test:approved && npm run test:review && npm run test:egress && npm run test:readiness && npm run test:loading",
-    "test:loading": "tsx tests/loading-resilience.test.ts"
+    "test": "npm run test:security && npm run test:renderer && npm run test:migrations && npm run test:drafts && npm run test:approved && npm run test:review && npm run test:egress && npm run test:readiness && npm run test:loading && npm run test:sync && npm run test:sync:postgres",
+    "test:loading": "tsx tests/loading-resilience.test.ts",
+    "test:sync": "tsx tests/editor-sync.test.ts",
+    "test:sync:postgres": "SYNC_TEST_PGLITE=true tsx tests/editor-sync.test.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -38,6 +40,7 @@
     "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",

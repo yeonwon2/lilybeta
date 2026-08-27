@@ -166,3 +166,7 @@ Theo đúng tôn chỉ kiến trúc, các tính năng sau **không** nằm trong
 - Đổi Client React sang kết nối trực tiếp bảng Supabase (giữ nguyên API backend để bảo vệ authorization và IDOR).
 - AI Beta / AI Auto-Review.
 - Payment / Public Sign-up.
+
+## Phase 5.5 — Editor Sync (additive, optional)
+
+Manual upload/import and all existing Beta/Review/Approve workflows remain available without Editor configuration. The new integration uses separate mapping tables and server-only credentials. See [contract, safety rules, setup and verification](docs/phase-5.5-editor-sync.md). No automatic replacement of manuscripts with existing Beta work is allowed.

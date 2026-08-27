@@ -1,3 +1,4 @@
+import { editorRouter } from './integrations/editorRouter.js';
 import { asyncHandler } from './middleware/asyncHandler.js';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
@@ -19,6 +20,8 @@ export const createApp = () => {
     origin: origin === '*' ? '*' : origin,
     credentials: true,
   }));
+
+  app.use('/api/integrations/editor', editorRouter());
 
   // 50mb limit for large parsed book drafts
   app.use(express.json({ limit: '50mb' }));
