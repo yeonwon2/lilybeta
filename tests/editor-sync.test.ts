@@ -77,6 +77,8 @@ try {
   const firstIds = first.results.map((c: any) => c.betaChapterId);
   const again = await request('/integrations/editor/sync', secret, payload(Array.from({ length: 20 }, (_, i) => ch(`chapter-${i + 1}`, i + 1))));
   check(again.results.every((c: any) => c.status === 'ALREADY_SYNCED' && c.contentVersion === 1) && again.betaBookId === first.betaBookId, 'Duplicate batch is idempotent with no version bump');
+  const overlap = await request('/integrations/editor/sync', secret, payload(Array.from({ length: 11 }, (_, i) => ch(`chapter-${i + 15}`, i + 15))));
+  check(overlap.totalChapters === 25 && overlap.betaBookId === first.betaBookId && overlap.results.filter((c: any) => c.status === 'ALREADY_SYNCED').length === 6 && overlap.results.filter((c: any) => c.status === 'CREATED').length === 5, 'Custom overlapping send 15–25 after 1–20 creates only five new chapters');
   const second = await request('/integrations/editor/sync', secret, payload(Array.from({ length: 10 }, (_, i) => ch(`chapter-${i + 21}`, i + 21))));
   check(second.totalChapters === 30 && second.syncState === 'SYNCED' && second.betaBookId === first.betaBookId, 'Incremental chapters 21–30 reuse same book');
   const preserved = await queryAll<any>('SELECT id FROM beta_chapters WHERE book_id = ? AND chapter_index <= 20 ORDER BY chapter_index', first.betaBookId);
