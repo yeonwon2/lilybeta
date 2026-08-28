@@ -102,18 +102,15 @@ export const InlineSelectionToolbar: React.FC<InlineSelectionToolbarProps> = ({
 
   if (!selectionInfo) return null;
 
-  // Calculate coordinates (fixed viewport positioned)
-  const top = Math.max(10, selectionInfo.rect.top - 48);
-  const left = Math.min(
-    window.innerWidth - 180,
-    Math.max(10, selectionInfo.rect.left + selectionInfo.rect.width / 2 - 80)
-  );
-
   return (
     <div
       ref={toolbarRef}
-      className="fixed z-50 animate-in fade-in zoom-in-95 duration-100"
-      style={{ top: `${top}px`, left: `${left}px` }}
+      className="fixed z-50 left-3 right-3 mx-auto max-w-sm animate-in fade-in duration-100"
+      role="toolbar"
+      aria-label="Thao tác với văn bản đã chọn"
+      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+      onClick={e => e.stopPropagation()}
+      onPointerDown={e => e.preventDefault()}
       onMouseDown={(e) => e.preventDefault()} // Prevent clearing selection
     >
       {crossParagraphWarning ? (
@@ -122,7 +119,7 @@ export const InlineSelectionToolbar: React.FC<InlineSelectionToolbarProps> = ({
           <span>Chỉ chọn trong 1 đoạn văn</span>
         </div>
       ) : (
-        <div className="bg-ink-950/95 backdrop-blur-md text-white rounded-2xl shadow-xl border border-white/15 p-1 flex items-center gap-0.5">
+        <div className="bg-ink-950/95 backdrop-blur-md text-white rounded-2xl shadow-xl border border-white/15 p-2 flex items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -130,7 +127,7 @@ export const InlineSelectionToolbar: React.FC<InlineSelectionToolbarProps> = ({
               window.getSelection()?.removeAllRanges();
               setSelectionInfo(null);
             }}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl hover:bg-white/20 text-xs font-semibold transition"
+            className="flex-1 min-h-12 flex justify-center items-center gap-2 px-4 py-3 rounded-xl hover:bg-white/20 text-sm font-semibold transition"
           >
             <Edit3 className="w-3.5 h-3.5 text-purple-300" />
             <span>Sửa</span>
@@ -145,7 +142,7 @@ export const InlineSelectionToolbar: React.FC<InlineSelectionToolbarProps> = ({
               window.getSelection()?.removeAllRanges();
               setSelectionInfo(null);
             }}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl hover:bg-white/20 text-xs font-semibold transition"
+            className="flex-1 min-h-12 flex justify-center items-center gap-2 px-4 py-3 rounded-xl hover:bg-white/20 text-sm font-semibold transition"
           >
             <MessageSquare className="w-3.5 h-3.5 text-amber-300" />
             <span>Ghi chú</span>

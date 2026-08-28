@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const reader = readFileSync('src/pages/beta/BetaReaderView.tsx','utf8');
+const toolbar = readFileSync('src/components/reader/InlineSelectionToolbar.tsx','utf8');
+const protection = readFileSync('src/components/reader/contentProtection.ts','utf8');
+const watermark = readFileSync('src/components/reader/Watermark.tsx','utf8');
+for (const event of ['onCopy','onCut','onDragStart','onContextMenu']) assert.ok(reader.includes(`${event}={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}`));
+assert.match(protection,/!field.readOnly && !field.disabled/);
+assert.match(toolbar,/bottom: 'calc\(env\(safe-area-inset-bottom/);
+assert.doesNotMatch(toolbar,/style=\{\{ top:/);
+assert.match(toolbar,/onPointerDown=\{e => e.preventDefault\(\)\}/);
+assert.match(watermark,/user.username/);
+assert.match(watermark,/pointer-events-none/);
+assert.match(watermark,/user.role !== 'BETA_READER'/);
+console.log('PASS: Beta-only transfer guards, editable exceptions, bottom selection toolbar, non-interactive account watermark');

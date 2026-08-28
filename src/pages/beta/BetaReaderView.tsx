@@ -1,3 +1,4 @@
+import { blockManuscriptTransfer } from '../../components/reader/contentProtection';
 import React, { useEffect, useRef } from 'react';
 import { 
   Loader2, 
@@ -244,6 +245,10 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
         backgroundColor: 'var(--reader-bg)', 
         color: 'var(--reader-text)',
       }}
+      onCopy={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}
+      onCut={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}
+      onDragStart={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}
+      onContextMenu={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}
       onClick={handleContentClick}
     >
       {/* Floating Toolbars */}
@@ -257,6 +262,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
 
       {/* Inline Selection Floating Toolbar */}
       <InlineSelectionToolbar
+        key={`${bookId}:${currentChapterIndex}`}
         onOpenEdit={(range) => {
           setActiveSelectionRange(range);
           setSelectedEdit(null);

@@ -3,15 +3,13 @@ import { useAuth } from '../../context/AuthContext';
 
 export const Watermark: React.FC = () => {
   const { user } = useAuth();
-  if (!user) return null;
+  if (!user || user.role !== 'BETA_READER') return null;
 
-  const label = `Beta • ${user.displayName || user.username}`;
+  const label = `LilyBeta • ${user.username}`;
 
   return (
-    <div className="fixed bottom-4 right-4 pointer-events-none z-20 select-none reader-watermark">
-      <div className="bg-ink-900/5 backdrop-blur-[1px] px-2.5 py-1 rounded-md text-[10px] font-mono tracking-widest text-ink-700/30">
-        {label}
-      </div>
+    <div aria-hidden="true" className="fixed inset-0 pointer-events-none z-20 select-none reader-watermark overflow-hidden grid grid-cols-2 grid-rows-3 items-center justify-items-center gap-8">
+      {Array.from({ length: 6 }, (_, index) => <span key={index} className="text-xs sm:text-sm font-mono -rotate-12 whitespace-nowrap" style={{ color: 'var(--reader-text)', opacity: 0.12 }}>{label}</span>)}
     </div>
   );
 };
