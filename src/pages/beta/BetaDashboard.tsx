@@ -65,7 +65,7 @@ export const BetaDashboard: React.FC<BetaDashboardProps> = ({ onSelectBook }) =>
   }, [books]);
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen app-bg text-ink-900 flex flex-col font-sans">
       {/* Top Navbar */}
       <header className="bg-white/90 backdrop-blur-md border-b border-ink-100/80 sticky top-0 z-30 shadow-2xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -146,9 +146,12 @@ export const BetaDashboard: React.FC<BetaDashboardProps> = ({ onSelectBook }) =>
 
         {/* Section Heading & Shelf Filters */}
         <div className="flex items-center justify-between border-b border-ink-100/80 pb-3">
-          <div>
-            <h3 className="font-serif font-bold text-lg text-ink-950">Tủ sách đang đọc duyệt</h3>
-            <p className="text-xs text-ink-400">Chọn tác phẩm để bắt đầu đọc và đánh dấu chỉnh sửa inline</p>
+          <div className="flex items-center gap-3">
+            <span className="w-1 h-6 rounded-full bg-gradient-to-b from-purple-600 to-lily-400" />
+            <div>
+              <h3 className="font-serif font-bold text-lg text-ink-950">Tủ sách đang đọc duyệt</h3>
+              <p className="text-xs text-ink-400">Chọn tác phẩm để bắt đầu đọc và đánh dấu chỉnh sửa inline</p>
+            </div>
           </div>
           <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-ink-100 text-ink-600">
             {books.length} tác phẩm
@@ -187,7 +190,7 @@ export const BetaDashboard: React.FC<BetaDashboardProps> = ({ onSelectBook }) =>
                 <div
                   key={b.id}
                   onClick={() => onSelectBook(b.id)}
-                  className="bg-white rounded-3xl p-5 sm:p-6 border border-ink-100/80 shadow-2xs hover:shadow-soft transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group"
+                  className="bg-white rounded-3xl p-5 sm:p-6 border border-ink-100/80 shadow-2xs hover:shadow-soft hover:-translate-y-0.5 hover:border-purple-200 transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group"
                 >
                   <div className="flex gap-4 sm:gap-5 items-start">
                     <BookCover

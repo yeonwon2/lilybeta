@@ -106,7 +106,7 @@ export const BetaBookDetail: React.FC<BetaBookDetailProps> = ({ bookId, onBack, 
   const isAllDone = completedCount === book.totalChapters && book.totalChapters > 0;
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen app-bg text-ink-900 flex flex-col font-sans">
       {/* Top Bar */}
       <header className="bg-white/90 backdrop-blur-md border-b border-ink-100/80 sticky top-0 z-30 shadow-2xs">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">

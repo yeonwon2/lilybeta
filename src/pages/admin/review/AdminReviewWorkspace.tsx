@@ -263,7 +263,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
   const isChapterApproved = chapterData?.chapter.derivedStatus === 'APPROVED';
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-ink-900 flex flex-col antialiased">
+    <div className="min-h-screen app-bg text-ink-900 flex flex-col antialiased">
 {quickReviewOpen && currentAssignment && <QuickReviewModal key={`${bookId}:${selectedAssignmentId}`} bookId={bookId} assignmentId={selectedAssignmentId} chapters={currentAssignment.chapters} currentChapterIndex={currentChapterIndex} readerName={currentAssignment.betaDisplayName || 'Beta Reader'} onClose={() => setQuickReviewOpen(false)} onComplete={async () => { await fetchChapterDetail(selectedAssignmentId, currentChapterIndex); await fetchOverview(); }} />}
       {/* Top Header Bar */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-ink-100 px-4 py-3 sm:px-6">

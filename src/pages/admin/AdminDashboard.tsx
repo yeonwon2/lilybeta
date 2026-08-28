@@ -228,7 +228,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   }, [books]);
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] text-ink-900 flex flex-col font-sans">
+    <div className="min-h-screen app-bg text-ink-900 flex flex-col font-sans">
       {accountOpen && <AdminAccountModal onClose={() => setAccountOpen(false)} />}
       {/* Top Studio Navbar */}
       <header className="bg-white/90 backdrop-blur-md border-b border-ink-100/80 sticky top-0 z-30 shadow-2xs">
@@ -261,7 +261,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         
         {/* Editorial Desk / Reading Stats Banner ("Cảm giác chăm chỉ hơn") */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white rounded-2xl p-4 border border-ink-100 shadow-2xs flex items-center gap-3.5">
+          <div className="bg-white rounded-2xl p-4 border border-ink-100 shadow-2xs hover:shadow-soft hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
               <BookOpen className="w-5 h-5" />
             </div>
@@ -276,7 +276,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 border border-ink-100 shadow-2xs flex items-center gap-3.5">
+          <div className="bg-white rounded-2xl p-4 border border-ink-100 shadow-2xs hover:shadow-soft hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0">
               <Bookmark className="w-5 h-5" />
             </div>
@@ -291,7 +291,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 border border-ink-100 shadow-2xs flex items-center gap-3.5">
+          <div className="bg-white rounded-2xl p-4 border border-ink-100 shadow-2xs hover:shadow-soft hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
               <Users className="w-5 h-5" />
             </div>
@@ -306,7 +306,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 border border-ink-100 shadow-2xs flex items-center gap-3.5">
+          <div className="bg-white rounded-2xl p-4 border border-ink-100 shadow-2xs hover:shadow-soft hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
               <TrendingUp className="w-5 h-5" />
             </div>
@@ -332,7 +332,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
         {/* Primary Navigation Tabs */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-ink-200/60 pb-3">
-          <div className="flex items-center gap-1.5 bg-black/5 p-1 rounded-2xl self-start">
+          <div className="flex items-center gap-1.5 bg-ink-100/60 p-1 rounded-2xl self-start">
             <button
               onClick={() => setActiveTab('books')}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
@@ -501,7 +501,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                 {filteredBooks.map((b) => (
                   <div
                     key={b.id}
-                    className="bg-white rounded-3xl p-5 border border-ink-100/80 shadow-2xs hover:shadow-soft transition-all duration-200 flex flex-col gap-4 group"
+                    className="bg-white rounded-3xl p-5 border border-ink-100/80 shadow-2xs hover:shadow-soft hover:-translate-y-0.5 hover:border-purple-200 transition-all duration-200 flex flex-col gap-4 group"
                   >
                     {/* Top Book Header */}
                     <div className="flex gap-4 items-start">

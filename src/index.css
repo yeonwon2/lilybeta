@@ -34,6 +34,22 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Gentle depth: keep the warm near-white backdrop, add a faint vertical tint
+     so cards float instead of sitting flat on a plain wall. */
+  .app-bg {
+    background-color: #FAF8F5;
+    background-image:
+      radial-gradient(ellipse 70% 40% at 50% -5%, rgba(255, 255, 255, 0.9), transparent 60%),
+      radial-gradient(ellipse 55% 35% at 100% 108%, rgba(220, 210, 195, 0.16), transparent 65%);
+  }
+
+  /* Refined card surface: a whisper of warmth at the top edge. */
+  .card-soft {
+    background: linear-gradient(180deg, #FFFDFB 0%, #FFFFFF 100%);
+    border: 1px solid rgba(31, 28, 24, 0.08);
+    box-shadow: 0 1px 2px rgba(31, 28, 24, 0.06), 0 18px 44px -24px rgba(31, 28, 24, 0.2);
+  }
 }
 
 button, input, select, textarea { font: inherit; }

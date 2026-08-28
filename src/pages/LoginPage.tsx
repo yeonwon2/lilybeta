@@ -34,7 +34,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-[#FAF8F5]">
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 app-bg">
       <div className="max-w-md w-full space-y-8">
         {/* Brand Header */}
         <div className="text-center space-y-3">

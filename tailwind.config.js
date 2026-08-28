@@ -50,6 +50,13 @@ export default {
         serif: ['"Literata"', '"Merriweather"', '"Playfair Display"', 'Georgia', 'serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
+      boxShadow: {
+        '2xs': '0 1px 2px rgba(31, 28, 24, 0.05)',
+        'xs': '0 1px 2px rgba(31, 28, 24, 0.06), 0 2px 4px rgba(31, 28, 24, 0.05)',
+        'soft': '0 2px 4px rgba(31, 28, 24, 0.05), 0 14px 30px -14px rgba(31, 28, 24, 0.16)',
+        'card': '0 1px 2px rgba(31, 28, 24, 0.06), 0 18px 44px -22px rgba(31, 28, 24, 0.22)',
+        'modal': '0 4px 12px rgba(31, 28, 24, 0.12), 0 28px 70px -28px rgba(31, 28, 24, 0.4)',
+      },
     },
   },
   plugins: [],
