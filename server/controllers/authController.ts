@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { queryOne, run } from '../db/database.js';
-import { JWT_SECRET } from '../middleware/auth.js';
+import { accountToken } from '../services/accountSession.js';
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body;
@@ -34,11 +33,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const token = jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
-    JWT_SECRET,
-    { expiresIn: '7d' }
-  );
+  const token = accountToken(user);
 
   // Log activity
   try {

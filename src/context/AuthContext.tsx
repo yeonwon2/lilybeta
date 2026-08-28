@@ -11,6 +11,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isBetaReader: boolean;
   login: (username: string, password: string) => Promise<User>;
+  updateAdminAccount: (input: { username: string; currentPassword: string; newPassword?: string; confirmPassword?: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -66,6 +67,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return res.user;
   };
 
+  const updateAdminAccount: AuthContextType['updateAdminAccount'] = async (input) => {
+    const res = await api.patch<{ token: string; user: User }>('/admin/account', input);
+    api.setToken(res.token);
+    setToken(res.token);
+    setUser(res.user);
+    setSessionError(null);
+  };
+
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -93,6 +102,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isAdmin,
         isBetaReader,
         login,
+        updateAdminAccount,
         logout,
         refreshUser,
       }}

@@ -22,12 +22,13 @@
     "test:egress": "tsx tests/egress-optimization.test.ts",
     "test:readiness": "tsx tests/readiness.test.ts",
     "test:postgres": "tsx tests/postgres-parity.test.ts",
-    "test": "npm run test:security && npm run test:renderer && npm run test:migrations && npm run test:drafts && npm run test:approved && npm run test:review && npm run test:egress && npm run test:readiness && npm run test:loading && npm run test:sync && npm run test:sync:postgres && npm run test:mobile && npm run test:export",
+    "test": "npm run test:security && npm run test:renderer && npm run test:migrations && npm run test:drafts && npm run test:approved && npm run test:review && npm run test:egress && npm run test:readiness && npm run test:loading && npm run test:sync && npm run test:sync:postgres && npm run test:mobile && npm run test:export && npm run test:account",
     "test:loading": "tsx tests/loading-resilience.test.ts",
     "test:sync": "tsx tests/editor-sync.test.ts",
     "test:sync:postgres": "SYNC_TEST_PGLITE=true tsx tests/editor-sync.test.ts",
     "test:mobile": "tsx tests/mobile-shell.test.ts",
-    "test:export": "tsx tests/export-snapshot.test.ts && tsx tests/document-export.test.ts"
+    "test:export": "tsx tests/export-snapshot.test.ts && tsx tests/document-export.test.ts",
+    "test:account": "tsx tests/admin-account.test.ts && ACCOUNT_TEST_PGLITE=true tsx tests/admin-account.test.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

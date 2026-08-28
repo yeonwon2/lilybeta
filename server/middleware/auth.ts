@@ -1,3 +1,4 @@
+import { credentialVersion } from '../services/accountSession.js';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { queryOne } from '../db/database.js';
@@ -30,11 +31,11 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
   const token = authHeader.split(' ')[1];
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { id: string; role: string };
+    const payload = jwt.verify(token, JWT_SECRET) as { id: string; role: string; credentialVersion?: string };
     
     // Always query database to verify fresh status and check if account has been disabled
     const userRow = await queryOne<any>(
-      'SELECT id, username, display_name, role, is_active FROM profiles WHERE id = ?',
+      'SELECT id, username, display_name, role, is_active, password_hash FROM profiles WHERE id = ?',
       payload.id
     );
 
@@ -45,6 +46,14 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
     if (!userRow.is_active) {
       res.status(401).json({ error: 'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ Quản trị viên.' });
+      return;
+    }
+
+    const obsoleteSession = payload.credentialVersion
+      ? payload.credentialVersion !== credentialVersion(userRow)
+      : userRow.role === 'ADMIN' && !!await queryOne('SELECT id FROM beta_activity_logs WHERE user_id = ? AND action = ? LIMIT 1', userRow.id, 'ADMIN_ACCOUNT_CHANGED');
+    if (obsoleteSession) {
+      res.status(401).json({ error: 'Thông tin đăng nhập đã thay đổi. Vui lòng đăng nhập lại.' });
       return;
     }
 

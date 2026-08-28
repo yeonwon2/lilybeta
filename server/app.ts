@@ -1,3 +1,4 @@
+import { updateAdminAccount } from './controllers/accountController.js';
 import { listExportChapters, exportApprovedBatch } from './exports/exportApproved.js';
 import { editorRouter } from './integrations/editorRouter.js';
 import { asyncHandler } from './middleware/asyncHandler.js';
@@ -67,6 +68,7 @@ export const createApp = () => {
   app.post('/api/auth/logout', asyncHandler(authController.logout));
 
   // Admin routes
+  app.patch('/api/admin/account', requireAuth, requireAdmin, asyncHandler(updateAdminAccount));
   app.get('/api/admin/beta-readers', requireAuth, requireAdmin, asyncHandler(adminController.listBetaReaders));
   app.post('/api/admin/beta-readers', requireAuth, requireAdmin, asyncHandler(adminController.createBetaReader));
   app.patch('/api/admin/beta-readers/:id/status', requireAuth, requireAdmin, asyncHandler(adminController.toggleBetaReaderStatus));

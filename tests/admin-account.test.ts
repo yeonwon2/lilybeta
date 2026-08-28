@@ -1,0 +1,66 @@
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import jwt from 'jsonwebtoken';
+import type { AddressInfo } from 'node:net';
+process.env.NODE_ENV = 'test'; process.env.DATABASE_PROVIDER = 'sqlite';
+const directory = mkdtempSync(join(tmpdir(), 'lily-admin-account-'));
+process.env.DB_PATH = join(directory, 'test.db');
+const { createApp } = await import('../server/app.js');
+const { runMigrations } = await import('../server/migrations/runner.js');
+const { queryOne, queryAll, closeDatabase, setAdapter } = await import('../server/db/database.js');
+const { JWT_SECRET } = await import('../server/middleware/auth.js');
+if (process.env.ACCOUNT_TEST_PGLITE === 'true') {
+  const { PgliteAdapter } = await import('./helpers/pgliteAdapter.js');
+  const { runPostgresMigrations } = await import('../server/migrations/postgresRunner.js');
+  const adapter = new PgliteAdapter(); setAdapter(adapter); await runPostgresMigrations(adapter as any);
+} else await runMigrations();
+const server = createApp().listen(0, '127.0.0.1');
+await new Promise<void>(r => server.once('listening', r));
+const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
+async function request(path: string, token = '', body?: any, status = 200, method = body === undefined ? 'GET' : 'POST') {
+  const response = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  const result = await response.json(); assert.equal(response.status, status, JSON.stringify(result)); return result;
+}
+const change = (token: string, body: any, status = 200) => request('/admin/account', token, body, status, 'PATCH');
+try {
+  const admin = await request('/auth/login', '', { username: 'admin', password: 'admin123456' });
+  const legacy = jwt.sign({ id: admin.user.id, username: 'admin', role: 'ADMIN' }, JWT_SECRET, { expiresIn: '7d' });
+  await request('/auth/me', legacy);
+  const beta = await request('/admin/beta-readers', admin.token, { username: 'reader1', displayName: 'Reader One', password: 'reader-password' }, 201);
+  const betaLogin = await request('/auth/login', '', { username: 'reader1', password: 'reader-password' });
+  const beforeBeta = JSON.stringify(await queryOne('SELECT * FROM profiles WHERE id = ?', beta.reader.id));
+  await change('', { currentPassword: 'admin123456', username: 'new-admin' }, 401);
+  await change(betaLogin.token, { currentPassword: 'reader-password', username: 'new-admin' }, 403);
+  await change(admin.token, { currentPassword: 'wrong', username: 'new-admin' }, 400);
+  await change(admin.token, { currentPassword: 'admin123456', username: 'READER1' }, 409);
+  await change(admin.token, { currentPassword: 'admin123456', username: 'x' }, 400);
+  await change(admin.token, { currentPassword: 'admin123456', newPassword: 'short', confirmPassword: 'short' }, 400);
+  await change(admin.token, { currentPassword: 'admin123456', newPassword: 'new-admin-password', confirmPassword: 'different' }, 400);
+  await change(admin.token, { currentPassword: 'admin123456', newPassword: 'ế'.repeat(30), confirmPassword: 'ế'.repeat(30) }, 400);
+  await change(admin.token, { currentPassword: 'admin123456', username: 'admin' }, 400);
+  assert.equal((await queryAll('SELECT id FROM beta_activity_logs WHERE action = ?', 'ADMIN_ACCOUNT_CHANGED')).length, 0);
+  const renamed = await change(admin.token, { currentPassword: 'admin123456', username: ' Updated.Admin ', id: beta.reader.id, role: 'BETA_READER' });
+  assert.equal(renamed.user.username, 'updated.admin'); assert.equal(renamed.user.id, admin.user.id); assert.equal(renamed.user.role, 'ADMIN');
+  await request('/auth/me', admin.token, undefined, 401); await request('/auth/me', legacy, undefined, 401);
+  await request('/auth/me', renamed.token); await request('/auth/me', betaLogin.token);
+  await request('/auth/login', '', { username: 'admin', password: 'admin123456' }, 401);
+  await request('/auth/login', '', { username: 'updated.admin', password: 'admin123456' });
+  const changed = await change(renamed.token, { currentPassword: 'admin123456', username: 'updated.admin', newPassword: 'new-admin-password', confirmPassword: 'new-admin-password' });
+  await request('/auth/me', renamed.token, undefined, 401); await request('/auth/me', changed.token);
+  await request('/auth/login', '', { username: 'updated.admin', password: 'admin123456' }, 401);
+  await request('/auth/login', '', { username: 'updated.admin', password: 'new-admin-password' });
+  assert.equal(JSON.stringify(await queryOne('SELECT * FROM profiles WHERE id = ?', beta.reader.id)), beforeBeta);
+  const logs = await queryAll<any>('SELECT details FROM beta_activity_logs WHERE action = ?', 'ADMIN_ACCOUNT_CHANGED');
+  assert.equal(logs.length, 2); assert.ok(!JSON.stringify(logs).includes('new-admin-password')); assert.ok(!('password_hash' in changed.user));
+  assert.equal((await queryAll('SELECT * FROM beta_books')).length, 0);
+  const temporary = await change(changed.token, { currentPassword: 'new-admin-password', username: 'temporary.admin' });
+  const restoredName = await change(temporary.token, { currentPassword: 'new-admin-password', username: 'updated.admin' });
+  await request('/auth/me', changed.token, undefined, 401);
+  await request('/auth/me', restoredName.token);
+  const racing = await Promise.all(['race.admin1', 'race.admin2'].map(username => fetch(base + '/admin/account', { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${restoredName.token}` }, body: JSON.stringify({ username, currentPassword: 'new-admin-password' }) })));
+  assert.equal(racing.filter(r => r.status === 200).length, 1);
+  assert.ok(racing.every(r => [200, 401, 409].includes(r.status)));
+  console.log('PASS: Admin account changes, reauthentication, input validation, duplicate/IDOR protection, token revocation, legacy compatibility, Beta unchanged, safe audit logs.');
+} finally { await new Promise<void>(r => server.close(() => r())); await closeDatabase(); rmSync(directory, { recursive: true, force: true }); }

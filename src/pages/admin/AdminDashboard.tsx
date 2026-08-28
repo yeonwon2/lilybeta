@@ -1,3 +1,4 @@
+import { AdminAccountModal } from './AdminAccountModal';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -39,6 +40,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
   const { user, logout } = useAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
   const navigate = onNavigate || ((path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -227,6 +229,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
   return (
     <div className="min-h-screen bg-[#FBF9F5] text-ink-900 flex flex-col font-sans">
+      {accountOpen && <AdminAccountModal onClose={() => setAccountOpen(false)} />}
       {/* Top Studio Navbar */}
       <header className="bg-white/90 backdrop-blur-md border-b border-ink-100/80 sticky top-0 z-30 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -241,6 +244,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               <span className="text-xs font-semibold text-ink-900">{user?.displayName}</span>
               <span className="text-[10px] text-ink-400 font-mono">@{user?.username} · Ban Quản Trị</span>
             </div>
+            <button onClick={() => setAccountOpen(true)} className="px-3 py-2 text-xs rounded-xl border border-ink-200 hover:bg-ink-50">Tài khoản Admin</button>
             <button
               onClick={() => logout()}
               className="p-2 rounded-xl text-ink-400 hover:text-rose-600 hover:bg-rose-50 transition"
