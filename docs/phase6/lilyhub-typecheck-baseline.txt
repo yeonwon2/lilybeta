@@ -1,0 +1,334 @@
+
+> base44-app@0.0.0 typecheck
+> tsc -p ./jsconfig.json
+
+src/api/base44Client.js(5,41): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/base44Client.js(5,78): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/base44Client.js(6,40): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/base44Client.js(9,42): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/base44Client.js(10,37): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/base44Client.js(10,79): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/base44Client.js(29,20): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/api/base44Client.js(178,28): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/components/admin/AdminAnalytics.jsx(29,80): error TS2464: A computed property name must be of type 'string', 'number', 'symbol', or 'any'.
+src/components/admin/AdminAnalytics.jsx(29,123): error TS2538: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' cannot be used as an index type.
+src/components/admin/AdminAnalytics.jsx(35,227): error TS2322: Type 'string | ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'Key'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'Key'.
+src/components/admin/AdminAnalytics.jsx(35,511): error TS2538: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' cannot be used as an index type.
+src/components/admin/AdminAnalytics.jsx(35,587): error TS2322: Type 'string | ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+src/components/admin/AdminAnalytics.jsx(36,450): error TS2339: Property 'chapter_reads' does not exist on type '{}'.
+src/components/admin/AdminStoriesWorkspace.jsx(95,257): error TS2739: Type '{ novels: any; onCreated: (novel: any) => void; }' is missing the following properties from type '{ novels?: any[]; onCreated: any; editing: any; onCancelEdit: any; }': editing, onCancelEdit
+src/components/admin/CategoriesManager.jsx(206,29): error TS2322: Type '{ checked: boolean; onCheckedChange: () => void; "aria-label": string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'checked' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/admin/ChapterForm.jsx(302,18): error TS2345: Argument of type 'string | ArrayBuffer' is not assignable to parameter of type 'SetStateAction<string>'.
+  Type 'ArrayBuffer' is not assignable to type 'SetStateAction<string>'.
+src/components/admin/ChapterForm.jsx(410,76): error TS2345: Argument of type '{ chapters: any[]; novelId: string; onProgress: (current: any) => void; }' is not assignable to parameter of type '{ chapters: any; novelId: any; existingChapters?: any[]; onProgress: any; onStatus: any; chunkSize?: number; }'.
+  Property 'onStatus' is missing in type '{ chapters: any[]; novelId: string; onProgress: (current: any) => void; }' but required in type '{ chapters: any; novelId: any; existingChapters?: any[]; onProgress: any; onStatus: any; chunkSize?: number; }'.
+src/components/admin/ChapterForm.jsx(495,235): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<number>'.
+src/components/admin/ChapterForm.jsx(504,266): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<number>'.
+src/components/admin/ChapterForm.jsx(504,466): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<number>'.
+src/components/admin/ChapterForm.jsx(530,439): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<number>'.
+src/components/admin/ChapterForm.jsx(531,222): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<number>'.
+src/components/admin/ChapterForm.jsx(531,443): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<number>'.
+src/components/admin/ChapterPagination.jsx(68,49): error TS2339: Property 'value' does not exist on type 'EventTarget'.
+src/components/admin/draftFileImport.js(26,22): error TS2488: Type 'NodeListOf<Element>' must have a '[Symbol.iterator]()' method that returns an iterator.
+src/components/admin/draftFileImport.js(54,9): error TS2488: Type 'NodeListOf<Element>' must have a '[Symbol.iterator]()' method that returns an iterator.
+src/components/admin/draftFileImport.js(59,26): error TS2488: Type 'NodeListOf<Element>' must have a '[Symbol.iterator]()' method that returns an iterator.
+src/components/admin/NovelForm.jsx(196,44): error TS2339: Property 'style' does not exist on type 'EventTarget'.
+src/components/admin/RoleplayGamesManager.jsx(315,171): error TS2339: Property 'style' does not exist on type 'EventTarget'.
+src/components/admin/SettingsForm.jsx(164,31): error TS2339: Property 'site_logo_text' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(174,31): error TS2339: Property 'site_logo_font' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(188,31): error TS2339: Property 'site_author_text' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(198,31): error TS2339: Property 'site_author_font' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(212,31): error TS2339: Property 'site_slogan_text' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(224,84): error TS2339: Property 'site_logo_font' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(225,25): error TS2339: Property 'site_logo_text' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(230,92): error TS2339: Property 'site_author_font' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(231,25): error TS2339: Property 'site_author_text' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(239,11): error TS2322: Type '{ ref: MutableRefObject<any>; settings: {}; settingId: any; onSaved: (id: any, value: any) => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'settings' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/admin/SettingsForm.jsx(257,31): error TS2339: Property 'support_bank_name' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(267,31): error TS2339: Property 'support_bank_owner' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(277,31): error TS2339: Property 'support_bank_number' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(287,31): error TS2339: Property 'support_note' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(297,31): error TS2339: Property 'support_button_text' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(307,31): error TS2339: Property 'support_title_text' does not exist on type '{}'.
+src/components/admin/SettingsForm.jsx(351,48): error TS2339: Property 'style' does not exist on type 'EventTarget'.
+src/components/admin/SupportSettingsManager.jsx(23,77): error TS2339: Property 'settings' does not exist on type '{}'.
+src/components/admin/SupportSettingsManager.jsx(23,87): error TS2339: Property 'onSaved' does not exist on type '{}'.
+src/components/admin/SupportSettingsManager.jsx(140,25): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/admin/SupportSettingsManager.jsx(140,71): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/assistant/lily-ai-client.js(5,33): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/components/assistant/lily-offline-engine.js(320,26): error TS2339: Property 'some' does not exist on type 'string | string[]'.
+  Property 'some' does not exist on type 'string'.
+src/components/assistant/lily-offline-engine.js(322,55): error TS2339: Property 'map' does not exist on type 'string | string[]'.
+  Property 'map' does not exist on type 'string'.
+src/components/assistant/lily-offline-engine.js(323,31): error TS2339: Property 'some' does not exist on type 'string | string[]'.
+  Property 'some' does not exist on type 'string'.
+src/components/assistant/lily-offline-engine.js(325,68): error TS2339: Property 'map' does not exist on type 'string | string[]'.
+  Property 'map' does not exist on type 'string'.
+src/components/assistant/lily-offline-engine.js(383,47): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/assistant/lily-offline-engine.js(383,97): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/assistant/lily-shared-memory-client.js(4,34): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/components/assistant/lily-story-knowledge.js(42,53): error TS2339: Property 'some' does not exist on type 'string | string[]'.
+  Property 'some' does not exist on type 'string'.
+src/components/AuthorDashboard.jsx(242,10): error TS2741: Property 'onNovelUpdated' is missing in type '{ novels: any[]; onCreated: () => Promise<void>; editing: any; editingLoading: boolean; onCancelEdit: () => void; }' but required in type '{ novels: any; onCreated: any; onNovelUpdated: any; editing: any; editingLoading: any; onCancelEdit: any; initialNovelId?: string; initialMode?: string; }'.
+src/components/ChapterCommentsDrawer.jsx(60,8): error TS2322: Type '{ children: Element[]; side: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ChapterCommentsDrawer.jsx(65,16): error TS2322: Type '{ children: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ChapterCommentsDrawer.jsx(66,16): error TS2322: Type '{ children: any[]; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ChapterReport.jsx(73,10): error TS2322: Type '{ children: Element[]; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ChapterReport.jsx(77,14): error TS2322: Type '{ children: any[]; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ChapterReport.jsx(79,12): error TS2322: Type '{ children: any[]; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ChapterReport.jsx(91,20): error TS2322: Type '{ children: Element; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ChapterReport.jsx(94,20): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ChapterReport.jsx(95,40): error TS2322: Type '{ children: string; key: string; value: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/Comments.jsx(57,46): error TS2345: Argument of type '{ novel_id: any; chapter_id: any; content: string; guest_token: string; }' is not assignable to parameter of type '{ novel_id: any; chapter_id: any; parent_id: any; paragraph: any; content: any; guest_token: any; }'.
+  Type '{ novel_id: any; chapter_id: any; content: string; guest_token: string; }' is missing the following properties from type '{ novel_id: any; chapter_id: any; parent_id: any; paragraph: any; content: any; guest_token: any; }': parent_id, paragraph
+src/components/Comments.jsx(74,46): error TS2345: Argument of type '{ novel_id: any; chapter_id: any; parent_id: any; content: string; guest_token: string; }' is not assignable to parameter of type '{ novel_id: any; chapter_id: any; parent_id: any; paragraph: any; content: any; guest_token: any; }'.
+  Property 'paragraph' is missing in type '{ novel_id: any; chapter_id: any; parent_id: any; content: string; guest_token: string; }' but required in type '{ novel_id: any; chapter_id: any; parent_id: any; paragraph: any; content: any; guest_token: any; }'.
+src/components/ParagraphComment.jsx(58,46): error TS2345: Argument of type '{ novel_id: any; chapter_id: any; paragraph: any; content: string; guest_token: string; }' is not assignable to parameter of type '{ novel_id: any; chapter_id: any; parent_id: any; paragraph: any; content: any; guest_token: any; }'.
+  Property 'parent_id' is missing in type '{ novel_id: any; chapter_id: any; paragraph: any; content: string; guest_token: string; }' but required in type '{ novel_id: any; chapter_id: any; parent_id: any; paragraph: any; content: any; guest_token: any; }'.
+src/components/ParagraphCommentsDrawer.jsx(57,8): error TS2322: Type '{ children: Element[]; side: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ParagraphCommentsDrawer.jsx(61,12): error TS2322: Type '{ children: any[]; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ParagraphCommentsDrawer.jsx(68,14): error TS2322: Type '{ children: any; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ParagraphCommentsDrawer.jsx(72,12): error TS2559: Type '{ children: (string | number)[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/reader/QuoteCardCreator.jsx(317,172): error TS2322: Type 'string' is not assignable to type 'TextAlign'.
+src/components/reader/QuoteCardCreator.jsx(321,148): error TS2322: Type 'string' is not assignable to type 'TextAlign'.
+src/components/reader/QuoteCardCreator.jsx(341,335): error TS2322: Type 'string | boolean | Dispatch<SetStateAction<boolean>>' is not assignable to type 'Key'.
+  Type 'boolean' is not assignable to type 'Key'.
+src/components/reader/QuoteCardCreator.jsx(341,591): error TS2322: Type 'string | boolean | Dispatch<SetStateAction<boolean>>' is not assignable to type 'boolean'.
+  Type 'string' is not assignable to type 'boolean'.
+src/components/reader/QuoteCardCreator.jsx(341,630): error TS2349: This expression is not callable.
+  Not all constituents of type 'string | boolean | Dispatch<SetStateAction<boolean>>' are callable.
+    Type 'string' has no call signatures.
+src/components/reader/QuoteCardCreator.jsx(341,710): error TS2322: Type 'string | boolean | Dispatch<SetStateAction<boolean>>' is not assignable to type 'ReactNode'.
+  Type 'Dispatch<SetStateAction<boolean>>' is not assignable to type 'ReactNode'.
+src/components/ReviewSection.jsx(24,14): error TS2741: Property 'onChange' is missing in type '{ value: any; readOnly: true; size: number; }' but required in type '{ value?: number; onChange: any; size?: number; readOnly?: boolean; }'.
+src/components/ReviewSection.jsx(183,12): error TS2741: Property 'onChange' is missing in type '{ value: number; readOnly: true; size: number; }' but required in type '{ value?: number; onChange: any; size?: number; readOnly?: boolean; }'.
+src/components/ui/button.jsx(37,36): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/button.jsx(37,47): error TS2339: Property 'variant' does not exist on type '{}'.
+src/components/ui/button.jsx(37,56): error TS2339: Property 'size' does not exist on type '{}'.
+src/components/ui/button.jsx(37,62): error TS2339: Property 'asChild' does not exist on type '{}'.
+src/components/ui/dialog.jsx(17,43): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/dialog.jsx(28,43): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/dialog.jsx(28,54): error TS2339: Property 'children' does not exist on type '{}'.
+src/components/ui/dialog.jsx(69,41): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/dialog.jsx(77,47): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/form.jsx(20,8): error TS2741: Property 'render' is missing in type '{}' but required in type '{ render: ({ field, fieldState, formState, }: { field: ControllerRenderProps<FieldValues, string>; fieldState: ControllerFieldState; formState: UseFormStateReturn<FieldValues>; }) => ReactElement<...>; }'.
+src/components/ui/form.jsx(30,49): error TS2339: Property 'name' does not exist on type '{}'.
+src/components/ui/form.jsx(36,11): error TS2339: Property 'id' does not exist on type '{}'.
+src/components/ui/form.jsx(40,24): error TS2339: Property 'name' does not exist on type '{}'.
+src/components/ui/form.jsx(50,38): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/form.jsx(61,39): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/form.jsx(67,7): error TS2322: Type '{ ref: ForwardedRef<any>; className: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'className' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/components/ui/form.jsx(92,45): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/form.jsx(105,41): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/form.jsx(105,52): error TS2339: Property 'children' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(7,38): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(7,49): error TS2339: Property 'containerClassName' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(8,4): error TS2322: Type '{ ref: ForwardedRef<any>; containerClassName: string; className: string; }' is not assignable to type 'IntrinsicAttributes & (OTPInputProps & RefAttributes<HTMLInputElement>)'.
+  Property 'maxLength' is missing in type '{ ref: ForwardedRef<any>; containerClassName: string; className: string; }' but required in type '{ value?: string; onChange?: (newValue: string) => unknown; maxLength: number; textAlign?: "center" | "left" | "right"; onComplete?: (...args: any[]) => unknown; pushPasswordManagerStrategy?: "none" | "increase-width"; pasteTransformer?: (pasted: string) => string; containerClassName?: string; noScriptCSSFallback?: ...'.
+src/components/ui/input-otp.jsx(16,43): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(21,42): error TS2339: Property 'index' does not exist on type '{}'.
+src/components/ui/input-otp.jsx(21,49): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/input.jsx(5,35): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/input.jsx(5,46): error TS2339: Property 'type' does not exist on type '{}'.
+src/components/ui/label.jsx(11,35): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/select.jsx(15,43): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/select.jsx(15,54): error TS2339: Property 'children' does not exist on type '{}'.
+src/components/ui/select.jsx(31,50): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/select.jsx(41,52): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/select.jsx(52,43): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/select.jsx(52,54): error TS2339: Property 'children' does not exist on type '{}'.
+src/components/ui/select.jsx(52,64): error TS2339: Property 'position' does not exist on type '{}'.
+src/components/ui/select.jsx(76,41): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/select.jsx(84,40): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/select.jsx(84,51): error TS2339: Property 'children' does not exist on type '{}'.
+src/components/ui/select.jsx(85,4): error TS2741: Property 'value' is missing in type '{ children: Element[]; ref: ForwardedRef<any>; className: string; }' but required in type 'SelectItemProps'.
+src/components/ui/select.jsx(102,45): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/sheet.jsx(17,42): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/sheet.jsx(47,42): error TS2339: Property 'side' does not exist on type '{}'.
+src/components/ui/sheet.jsx(47,58): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/sheet.jsx(47,69): error TS2339: Property 'children' does not exist on type '{}'.
+src/components/ui/sheet.jsx(82,40): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/sheet.jsx(90,46): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/ui/switch.jsx(6,36): error TS2339: Property 'className' does not exist on type '{}'.
+src/features/han-viet/hanVietClient.js(7,37): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/features/han-viet/hanVietClient.js(9,31): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/features/han-viet/hanVietClient.js(75,11): error TS2339: Property 'status' does not exist on type 'Error'.
+src/lib/comment-utils.js(20,25): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/lib/comment-utils.js(20,57): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/lib/gameLibrary.js(11,40): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/gameLibrary.js(15,15): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/gameLibrary.js(16,18): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/ReaderAuthContext.jsx(11,33): error TS2339: Property 'user' does not exist on type 'never'.
+src/lib/ReaderAuthContext.jsx(25,20): error TS2339: Property 'user' does not exist on type 'never'.
+src/lib/ReaderAuthContext.jsx(28,69): error TS2554: Expected 1-2 arguments, but got 0.
+src/lib/snapshotClient.js(9,39): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/turnstile.js(5,30): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/turnstile.js(14,14): error TS2339: Property 'turnstile' does not exist on type 'Window & typeof globalThis'.
+src/lib/turnstile.js(37,21): error TS2339: Property 'turnstile' does not exist on type 'Window & typeof globalThis'.
+src/lib/turnstile.js(55,12): error TS2339: Property 'turnstile' does not exist on type 'Window & typeof globalThis'.
+src/lib/turnstile.js(59,14): error TS2339: Property 'turnstile' does not exist on type 'Window & typeof globalThis'.
+src/pages/AdminLogin.jsx(53,14): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/AdminLogin.jsx(54,149): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/AdminLogin.jsx(57,14): error TS2322: Type '{ children: string; htmlFor: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/AdminLogin.jsx(60,22): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/AdminLogin.jsx(64,12): error TS2322: Type '{ children: Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(60,16): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(61,18): error TS2559: Type '{ children: string; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(62,18): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(73,16): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(74,18): error TS2559: Type '{ children: string; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(75,18): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(86,16): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(87,18): error TS2559: Type '{ children: string; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(88,18): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangKy.jsx(95,12): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangNhap.jsx(59,16): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangNhap.jsx(60,18): error TS2559: Type '{ children: string; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangNhap.jsx(61,18): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangNhap.jsx(72,16): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangNhap.jsx(73,18): error TS2559: Type '{ children: string; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangNhap.jsx(74,18): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DangNhap.jsx(81,12): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DatLaiMatKhau.jsx(39,8): error TS2741: Property 'footer' is missing in type '{ children: Element; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; footer: any; children: any; }'.
+src/pages/DatLaiMatKhau.jsx(51,6): error TS2741: Property 'footer' is missing in type '{ children: Element[]; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; footer: any; children: any; }'.
+src/pages/DatLaiMatKhau.jsx(61,16): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DatLaiMatKhau.jsx(62,18): error TS2559: Type '{ children: string; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DatLaiMatKhau.jsx(63,18): error TS2559: Type '{ children: Element; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/DatLaiMatKhau.jsx(70,12): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ForgotPassword.jsx(46,14): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ForgotPassword.jsx(50,17): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ForgotPassword.jsx(62,12): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Home.jsx(148,33): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/Home.jsx(149,39): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/Home.jsx(169,37): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/Home.jsx(170,43): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/pages/Home.jsx(257,27): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/Home.jsx(257,59): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/Home.jsx(261,27): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/Home.jsx(261,77): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/Library.jsx(84,41): error TS2741: Property 'hot' is missing in type '{ key: any; novel: any; stats: any; }' but required in type '{ novel: any; stats: any; hot: any; }'.
+src/pages/Login.jsx(58,8): error TS2322: Type '{ children: (string | Element)[]; variant: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(84,12): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(88,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(102,14): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(110,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Login.jsx(121,10): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/NovelDetail.jsx(97,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: string; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(98,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: string; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(99,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: string; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(100,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: any; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(101,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: string; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(245,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: string; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(246,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: string; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(247,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: string; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(248,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: number; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/NovelDetail.jsx(249,16): error TS2741: Property 'detail' is missing in type '{ icon: Element; value: string; label: string; }' but required in type '{ icon: any; value: any; label: any; detail: any; }'.
+src/pages/Reader.jsx(1254,28): error TS2322: Type '{ children: Element; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1257,28): error TS2322: Type '{ children: Element[][]; side: string; align: string; sideOffset: number; avoidCollisions: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1258,55): error TS2322: Type '{ children: any[]; key: string; value: any; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1259,58): error TS2322: Type '{ children: any[]; key: any; value: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1383,18): error TS2322: Type '{ children: Element; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1384,18): error TS2322: Type '{ children: Element[][]; side: string; align: string; sideOffset: number; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1385,45): error TS2322: Type '{ children: any[]; key: string; value: any; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1386,48): error TS2322: Type '{ children: any[]; key: any; value: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1428,16): error TS2322: Type '{ children: Element; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1431,16): error TS2322: Type '{ children: Element[][]; side: string; align: string; sideOffset: number; avoidCollisions: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1432,43): error TS2322: Type '{ children: any[]; key: string; value: any; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1433,46): error TS2322: Type '{ children: any[]; key: any; value: string; className: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Reader.jsx(1465,1072): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'SetStateAction<number>'.
+  Type 'string' is not assignable to type 'SetStateAction<number>'.
+src/pages/Reader.jsx(1475,1969): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'SetStateAction<number>'.
+  Type 'string' is not assignable to type 'SetStateAction<number>'.
+src/pages/Reader.jsx(1509,24): error TS2339: Property 'closest' does not exist on type 'EventTarget'.
+src/pages/Reader.jsx(1533,13): error TS2322: Type 'string' is not assignable to type 'TextAlign'.
+src/pages/Register.jsx(75,8): error TS2741: Property 'footer' is missing in type '{ children: Element[]; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; footer: any; children: any; }'.
+src/pages/Register.jsx(86,12): error TS2322: Type '{ children: Element; maxLength: number; value: string; onChange: Dispatch<SetStateAction<string>>; autoFocus: true; autoComplete: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(93,14): error TS2559: Type '{ children: Element[]; }' has no properties in common with type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(94,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(95,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(96,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(97,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(98,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(99,29): error TS2322: Type '{ index: number; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'index' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(103,10): error TS2322: Type '{ children: string | Element; className: string; onClick: () => Promise<void>; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(141,8): error TS2322: Type '{ children: (string | Element)[]; variant: string; className: string; onClick: () => void; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(167,12): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(171,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(184,12): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(188,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(200,12): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(204,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/Register.jsx(215,10): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(55,8): error TS2741: Property 'footer' is missing in type '{ children: Element; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; footer: any; children: any; }'.
+src/pages/ResetPassword.jsx(81,6): error TS2741: Property 'footer' is missing in type '{ children: Element[]; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; title: string; subtitle: string; }' but required in type '{ icon: any; title: any; subtitle: any; footer: any; children: any; }'.
+src/pages/ResetPassword.jsx(93,12): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(97,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; autoFocus: true; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(110,12): error TS2322: Type '{ children: string; htmlFor: string; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(114,15): error TS2322: Type '{ id: string; type: string; autoComplete: string; placeholder: string; value: string; onChange: (e: any) => void; className: string; required: true; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'id' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
+src/pages/ResetPassword.jsx(125,10): error TS2322: Type '{ children: string | Element; type: string; className: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & RefAttributes<any>'.
+  Property 'children' does not exist on type 'IntrinsicAttributes & RefAttributes<any>'.
