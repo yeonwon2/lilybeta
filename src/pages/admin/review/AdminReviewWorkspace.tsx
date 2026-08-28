@@ -264,6 +264,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-ink-900 flex flex-col antialiased">
+{quickReviewOpen && currentAssignment && <QuickReviewModal key={`${bookId}:${selectedAssignmentId}`} bookId={bookId} assignmentId={selectedAssignmentId} chapters={currentAssignment.chapters} currentChapterIndex={currentChapterIndex} readerName={currentAssignment.betaDisplayName || 'Beta Reader'} onClose={() => setQuickReviewOpen(false)} onComplete={async () => { await fetchChapterDetail(selectedAssignmentId, currentChapterIndex); await fetchOverview(); }} />}
       {/* Top Header Bar */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-ink-100 px-4 py-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
@@ -295,7 +296,6 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
           {/* Chapter Selector & Layer Switcher */}
           <div className="flex items-center gap-2">
             <button disabled={!currentAssignment} onClick={() => setQuickReviewOpen(true)} className="px-3 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg disabled:opacity-50">Duyệt nhanh</button>
-            {quickReviewOpen && currentAssignment && <QuickReviewModal key={`${bookId}:${selectedAssignmentId}`} bookId={bookId} assignmentId={selectedAssignmentId} chapters={currentAssignment.chapters} currentChapterIndex={currentChapterIndex} readerName={currentAssignment.betaDisplayName || 'Beta Reader'} onClose={() => setQuickReviewOpen(false)} onComplete={async () => { await fetchChapterDetail(selectedAssignmentId, currentChapterIndex); await fetchOverview(); }} />}
             <ExportApproved key={`${bookId}:${selectedAssignmentId}`} bookId={bookId} assignmentId={selectedAssignmentId} readerName={currentAssignment?.betaDisplayName || "Beta Reader"} currentChapter={currentChapterIndex} />
             {/* Chapter Navigator */}
             <div className="flex items-center bg-ink-50 rounded-2xl border border-ink-200 p-1">
