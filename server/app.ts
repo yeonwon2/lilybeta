@@ -1,3 +1,4 @@
+import { acceptPendingEdits } from './controllers/bulkReviewController.js';
 import { updateAdminAccount } from './controllers/accountController.js';
 import { listExportChapters, exportApprovedBatch } from './exports/exportApproved.js';
 import { editorRouter } from './integrations/editorRouter.js';
@@ -89,6 +90,7 @@ export const createApp = () => {
   // Phase 4: Admin Review & Chapter Approval routes
   app.get('/api/admin/books/:id/review', requireAuth, requireAdmin, asyncHandler(reviewController.getBookReviewOverview));
   app.get('/api/admin/books/:id/assignments/:assignmentId/chapters/:index/review', requireAuth, requireAdmin, asyncHandler(reviewController.getChapterReviewDetail));
+  app.post('/api/admin/books/:id/assignments/:assignmentId/chapters/:index/accept-pending', requireAuth, requireAdmin, asyncHandler(acceptPendingEdits));
   app.post('/api/admin/edits/:editId/reviews', requireAuth, requireAdmin, asyncHandler(reviewController.createEditReview));
   app.post('/api/admin/books/:id/assignments/:assignmentId/chapters/:index/approve', requireAuth, requireAdmin, asyncHandler(reviewController.approveChapter));
   app.post('/api/admin/books/:id/assignments/:assignmentId/chapters/:index/reopen', requireAuth, requireAdmin, asyncHandler(reviewController.reopenChapter));

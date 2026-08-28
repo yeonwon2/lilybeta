@@ -682,7 +682,7 @@ export const approveChapter = async (req: Request, res: Response): Promise<void>
   // Collect accepted revisions snapshot
   const acceptedItems: AcceptedRevisionItem[] = [];
   for (const e of edits) {
-    if (e.acceptedRevisionNumber) {
+    if (e.currentDecision === 'ACCEPTED' && e.acceptedRevisionNumber === e.version) {
       const rev = await queryOne<any>(
         'SELECT * FROM beta_edit_revisions WHERE edit_id = ? AND revision_number = ?',
         e.id,

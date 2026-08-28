@@ -1,3 +1,4 @@
+import { QuickReviewModal } from './QuickReviewModal';
 import { ExportApproved } from '../../../exports/ExportApproved';
 import React, { useState, useEffect, useMemo } from 'react';
 import { api, ApiError } from '../../../services/api';
@@ -68,6 +69,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
   const [reviewError, setReviewError] = useState<string | null>(null);
 
   // Approval Modal
+  const [quickReviewOpen, setQuickReviewOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [approveError, setApproveError] = useState<string | null>(null);
@@ -292,6 +294,8 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
 
           {/* Chapter Selector & Layer Switcher */}
           <div className="flex items-center gap-2">
+            <button disabled={!currentAssignment} onClick={() => setQuickReviewOpen(true)} className="px-3 py-2 text-sm font-semibold bg-indigo-600 text-white rounded-lg disabled:opacity-50">Duyệt nhanh</button>
+            {quickReviewOpen && currentAssignment && <QuickReviewModal key={`${bookId}:${selectedAssignmentId}`} bookId={bookId} assignmentId={selectedAssignmentId} chapters={currentAssignment.chapters} currentChapterIndex={currentChapterIndex} readerName={currentAssignment.betaDisplayName || 'Beta Reader'} onClose={() => setQuickReviewOpen(false)} onComplete={async () => { await fetchChapterDetail(selectedAssignmentId, currentChapterIndex); await fetchOverview(); }} />}
             <ExportApproved key={`${bookId}:${selectedAssignmentId}`} bookId={bookId} assignmentId={selectedAssignmentId} readerName={currentAssignment?.betaDisplayName || "Beta Reader"} currentChapter={currentChapterIndex} />
             {/* Chapter Navigator */}
             <div className="flex items-center bg-ink-50 rounded-2xl border border-ink-200 p-1">
