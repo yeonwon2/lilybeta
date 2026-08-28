@@ -13,3 +13,10 @@ assert.match(watermark,/user.username/);
 assert.match(watermark,/pointer-events-none/);
 assert.match(watermark,/user.role !== 'BETA_READER'/);
 console.log('PASS: Beta-only transfer guards, editable exceptions, bottom selection toolbar, non-interactive account watermark');
+
+const css = readFileSync('src/index.css','utf8');
+const watermarkRule = css.match(/\.reader-watermark\s*\{([^}]+)\}/)?.[1];
+assert.ok(watermarkRule);
+assert.doesNotMatch(watermarkRule!, /opacity\s*:/, 'Do not multiply label opacity by container opacity');
+assert.match(watermark, /opacity: 0.22/);
+assert.match(watermark, /z-\[60\]/);

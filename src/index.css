@@ -189,11 +189,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   text-wrap: pretty;
 }
 
-/* Subtle Reader Watermark */
+/* Watermark opacity is set on each label, not multiplied on its container. */
 .reader-watermark {
   user-select: none;
   pointer-events: none;
-  opacity: 0.08;
   font-size: 11px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
