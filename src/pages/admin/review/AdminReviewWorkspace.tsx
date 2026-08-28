@@ -1,3 +1,4 @@
+import { ExportApproved } from '../../../exports/ExportApproved';
 import React, { useState, useEffect, useMemo } from 'react';
 import { api, ApiError } from '../../../services/api';
 import { BrandLogo } from '../../../components/common/BrandLogo';
@@ -291,6 +292,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
 
           {/* Chapter Selector & Layer Switcher */}
           <div className="flex items-center gap-2">
+            <ExportApproved key={`${bookId}:${selectedAssignmentId}`} bookId={bookId} assignmentId={selectedAssignmentId} readerName={currentAssignment?.betaDisplayName || "Beta Reader"} currentChapter={currentChapterIndex} />
             {/* Chapter Navigator */}
             <div className="flex items-center bg-ink-50 rounded-2xl border border-ink-200 p-1">
               <button

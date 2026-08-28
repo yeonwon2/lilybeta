@@ -1,3 +1,4 @@
+import { listExportChapters, exportApprovedBatch } from './exports/exportApproved.js';
 import { editorRouter } from './integrations/editorRouter.js';
 import { asyncHandler } from './middleware/asyncHandler.js';
 import express, { Request, Response, NextFunction } from 'express';
@@ -76,6 +77,9 @@ export const createApp = () => {
   app.delete('/api/admin/books/:id/assign/:userId', requireAuth, requireAdmin, asyncHandler(adminController.revokeAssignment));
   app.get('/api/admin/logs', requireAuth, requireAdmin, asyncHandler(adminController.getActivityLogs));
   app.get('/api/admin/books/:id/edits', requireAuth, requireAdmin, asyncHandler(editController.listAdminBookEdits));
+
+  app.get('/api/admin/books/:id/approved-export/chapters', requireAuth, requireAdmin, asyncHandler(listExportChapters));
+  app.post('/api/admin/books/:id/approved-export/export', requireAuth, requireAdmin, asyncHandler(exportApprovedBatch));
 
   // Phase 5: Book Derived Readiness Endpoint
   app.get('/api/admin/books/:id/readiness', requireAuth, requireAdmin, asyncHandler(adminController.getBookReadiness));

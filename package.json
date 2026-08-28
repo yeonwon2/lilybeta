@@ -22,11 +22,12 @@
     "test:egress": "tsx tests/egress-optimization.test.ts",
     "test:readiness": "tsx tests/readiness.test.ts",
     "test:postgres": "tsx tests/postgres-parity.test.ts",
-    "test": "npm run test:security && npm run test:renderer && npm run test:migrations && npm run test:drafts && npm run test:approved && npm run test:review && npm run test:egress && npm run test:readiness && npm run test:loading && npm run test:sync && npm run test:sync:postgres && npm run test:mobile",
+    "test": "npm run test:security && npm run test:renderer && npm run test:migrations && npm run test:drafts && npm run test:approved && npm run test:review && npm run test:egress && npm run test:readiness && npm run test:loading && npm run test:sync && npm run test:sync:postgres && npm run test:mobile && npm run test:export",
     "test:loading": "tsx tests/loading-resilience.test.ts",
     "test:sync": "tsx tests/editor-sync.test.ts",
     "test:sync:postgres": "SYNC_TEST_PGLITE=true tsx tests/editor-sync.test.ts",
-    "test:mobile": "tsx tests/mobile-shell.test.ts"
+    "test:mobile": "tsx tests/mobile-shell.test.ts",
+    "test:export": "tsx tests/export-snapshot.test.ts && tsx tests/document-export.test.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -34,7 +35,9 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.475.0",
+    "pdfmake": "^0.2.20",
     "pg": "^8.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -47,6 +50,7 @@
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.8",
     "@types/node": "^22.13.10",
+    "@types/pdfmake": "^0.2.12",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",

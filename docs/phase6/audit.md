@@ -1,3 +1,5 @@
+> Superseded: yêu cầu mới dùng xuất TXT/DOCX/PDF ở LilyBeta, giữ nguyên importer LilyHub. Không triển khai direct publish hay ZIP pipeline. Xem [quyết định mới](../approved-file-export.md).
+
 # Phase 6 pre-implementation audit — 2026-08-28
 
 ## Status and scope decision

@@ -12,7 +12,7 @@ const directory = mkdtempSync(join(tmpdir(), 'lilybeta-sync-test-'));
 process.env.DB_PATH = join(directory, 'test.db');
 const { createApp } = await import('../server/app.js');
 const { runMigrations } = await import('../server/migrations/runner.js');
-const { queryOne, queryAll, run, closeDatabase, setAdapter } = await import('../server/db/database.js');
+const { queryOne, queryAll, run, closeDatabase, setAdapter, getAdapter } = await import('../server/db/database.js');
 if (process.env.SYNC_TEST_PGLITE === 'true') {
   const { PgliteAdapter } = await import('./helpers/pgliteAdapter.js');
   const { runPostgresMigrations } = await import('../server/migrations/postgresRunner.js');
@@ -51,6 +51,23 @@ async function workflow(bookId: string, admin: string, beta: string, userId: str
   await request(`/admin/books/${bookId}/assignments/${assignment.id}/chapters/1/approve`, admin, {});
   const approved = await request(`/books/${bookId}/chapters/1/approved?assignmentId=${assignment.id}`, admin);
   check(approved.paragraphs[0].startsWith('Chàng'), 'Assign → edit → complete → review → approve PASS');
+  // File export path is Admin-only and reads the stored snapshot, never live edits.
+  const listing = await request(`/admin/books/${bookId}/approved-export/chapters?assignmentId=${assignment.id}`, admin);
+  check(listing.chapters.every((c: any) => !('paragraphs' in c) && !('content' in c)), 'Export selection returns metadata only');
+  const selected = listing.chapters.find((c: any) => c.chapterNumber === 1);
+  const exportBody = { assignmentId: assignment.id, chapters: [{ id: selected.id, snapshotVersion: selected.snapshotVersion }] };
+  await request(`/admin/books/${bookId}/approved-export/export`, beta, exportBody, 403);
+  const exported = await request(`/admin/books/${bookId}/approved-export/export`, admin, exportBody);
+  check(exported.chapters[0].content === approved.paragraphs.join('\n\n'), 'Stored approval snapshot exports exact accepted content');
+  const { exportTxt } = await import('../src/exports/documentExport.js');
+  check(exportTxt(exported.chapters).includes(exported.chapters[0].content), 'Editor/manual → review → TXT export includes exact approved text');
+  const liveEdit = await queryOne<any>('SELECT current_text FROM beta_edits WHERE id = ?', edit.id);
+  await run('UPDATE beta_edits SET current_text = ? WHERE id = ?', 'DRAFT MUST NEVER EXPORT', edit.id);
+  const afterDraftChange = await request(`/admin/books/${bookId}/approved-export/export`, admin, exportBody);
+  check(afterDraftChange.chapters[0].content === exported.chapters[0].content, 'Live mutable edit changes cannot enter export');
+  await run('UPDATE beta_edits SET current_text = ? WHERE id = ?', liveEdit.current_text, edit.id);
+  const staleExport = await request(`/admin/books/${bookId}/approved-export/export`, admin, { ...exportBody, chapters: [{ id: selected.id, snapshotVersion: selected.snapshotVersion + 1 }] });
+  check(!!staleExport.chapters[0].error, 'Changed snapshot version is blocked');
   return assignment;
 }
 try {
@@ -126,6 +143,40 @@ try {
   check(append.results[0].status === 'CREATED' && append.totalChapters === 31 && append.syncState === 'CONFLICT', 'Append works during Beta; previous conflict is not hidden');
   const unreadConflict = await request('/integrations/editor/sync', secret, payload([ch('chapter-2', 2, 'Different', timestamp(2))]));
   check(unreadConflict.results[0].reason === 'BOOK_ALREADY_ASSIGNED', 'Conservative cache safety locks source after assignment');
+  // 305 real synthetic source rows, selected five bodies only.
+  let largeBookId = '';
+  for (let offset = 0; offset < 305; offset += 25) {
+    const batch = Array.from({ length: Math.min(25, 305 - offset) }, (_, i) => ch(`large-${offset + i + 1}`, offset + i + 1));
+    largeBookId = (await request('/integrations/editor/sync', secret, payload(batch, 'large-synthetic-book', 305))).betaBookId;
+  }
+  const largeAssignment = (await request(`/admin/books/${largeBookId}/assign`, admin, { betaUserId: user.id })).assignment;
+  for (let index = 101; index <= 105; index++) {
+    const edit = (await request(`/books/${largeBookId}/chapters/${index}/edits`, beta, { paragraphIndex: 0, startOffset: 0, endOffset: 3, originalText: 'Hắn', proposedText: 'Chàng', errorType: 'XUNG_HO' }, 201)).edit;
+    await request(`/books/${largeBookId}/chapters/${index}/complete`, beta, {});
+    await request(`/admin/edits/${edit.id}/reviews`, admin, { decision: 'ACCEPTED', expectedEditVersion: 1, expectedRevisionNumber: 1 }, 201);
+    await request(`/admin/books/${largeBookId}/assignments/${largeAssignment.id}/chapters/${index}/approve`, admin, {});
+  }
+  const adapter = getAdapter(); const originalQueryAll = adapter.queryAll.bind(adapter); let bodiesRead = 0;
+  adapter.queryAll = ((sql: string, ...args: any[]) => {
+    const result = originalQueryAll(sql, ...args);
+    if (/c\.paragraphs/.test(sql)) return Promise.resolve(result).then(rows => { bodiesRead += rows.length; return rows; });
+    return result;
+  }) as typeof adapter.queryAll;
+  const listing305 = await request(`/admin/books/${largeBookId}/approved-export/chapters?assignmentId=${largeAssignment.id}`, admin);
+  check(listing305.chapters.length === 305 && bodiesRead === 0, '305-chapter selection loads zero bodies');
+  const selected5 = listing305.chapters.filter((c: any) => c.chapterNumber >= 101 && c.chapterNumber <= 105);
+  let exportData: any = null; const exported5 = [];
+  for (const chapter of selected5) {
+    exportData = await request(`/admin/books/${largeBookId}/approved-export/export`, admin, { assignmentId: largeAssignment.id, chapters: [{ id: chapter.id, snapshotVersion: chapter.snapshotVersion }] });
+    exported5.push(...exportData.chapters);
+  }
+  adapter.queryAll = originalQueryAll;
+  check(bodiesRead === 5 && exported5.length === 5 && exported5.every(c => c.content === 'Chàng nhìn nàng.'), 'Selected 101–105 from 305: exactly five approved bodies reconstructed');
+  const { exportTxt } = await import('../src/exports/documentExport.js');
+  check(exportTxt(exported5).includes('Chương 105'), 'Selected TXT contains chapter headings for LilyHub importer');
+  await request(`/admin/books/${largeBookId}/assignments/${largeAssignment.id}/chapters/101/reopen`, admin, {});
+  const reopened = await request(`/admin/books/${largeBookId}/approved-export/export`, admin, { assignmentId: largeAssignment.id, chapters: [{ id: selected5[0].id, snapshotVersion: selected5[0].snapshotVersion }] });
+  check(!!reopened.chapters[0].error, 'Reopened approved chapter is blocked from export');
   const state = await request('/integrations/editor/books/source-book', secret);
   check(state.chapters.length === 31 && state.chapters[0].syncStatus === 'SOURCE_CONFLICT' && !JSON.stringify(state).includes('paragraphs'), 'Status checkpoint is metadata-only and carries unresolved conflict');
   check(JSON.stringify(await queryAll('SELECT * FROM beta_chapters WHERE book_id = ?', manual.id)) === manualBefore, 'Manual book remains untouched by every integration operation');
