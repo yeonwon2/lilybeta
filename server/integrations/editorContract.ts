@@ -15,6 +15,7 @@ export interface SourceChapter {
 }
 export interface SyncInput {
   editorBookId: string;
+  overwriteExisting: boolean;
   book: { title: string; author: string; totalChapters?: number };
   chapters: SourceChapter[];
 }
@@ -29,6 +30,8 @@ function text(value: unknown, label: string, max: number): string {
 export function parseSyncInput(value: any): SyncInput {
   if (!value || typeof value !== 'object') invalid('Thiếu payload');
   const editorBookId = text(value.editorBookId, 'editorBookId', 200);
+  if (value.overwriteExisting !== undefined && typeof value.overwriteExisting !== 'boolean') invalid('overwriteExisting không hợp lệ');
+  const overwriteExisting = value.overwriteExisting === true;
   const book = {
     title: text(value.book?.title, 'book.title', 500),
     author: value.book?.author === undefined ? 'Chưa rõ tác giả' : text(value.book.author, 'book.author', 300),
@@ -57,5 +60,5 @@ export function parseSyncInput(value: any): SyncInput {
     if (c.contentHash !== undefined && c.contentHash !== hash) throw new SyncError(400, 'CONTENT_HASH_MISMATCH', 'Hash nguồn không khớp hash LilyBeta tính lại');
     return { editorChapterId: id, chapterIndex: c.chapterIndex, title, paragraphs: c.paragraphs, updatedAt: new Date(c.updatedAt).toISOString(), sourceVersion: version, contentHash: hash };
   });
-  return { editorBookId, book, chapters: chapters.sort((a: SourceChapter, b: SourceChapter) => a.chapterIndex - b.chapterIndex) };
+  return { editorBookId, overwriteExisting, book, chapters: chapters.sort((a: SourceChapter, b: SourceChapter) => a.chapterIndex - b.chapterIndex) };
 }

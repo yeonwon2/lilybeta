@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { AddressInfo } from 'node:net';
 import { TxtImporter } from '../src/book-engine/importers/TxtImporter.js';
 import { sourceHash } from '../server/integrations/editorContract.js';
@@ -39,7 +40,7 @@ const secret = 'synthetic-integration-secret-only-for-local-tests';
 const timestamp = (n: number) => new Date(Date.now() - 100_000 + n * 1000).toISOString();
 const stamp = timestamp(0);
 const ch = (id: string, index: number, content = 'Hắn nhìn nàng.', updatedAt = stamp) => ({ editorChapterId: id, chapterIndex: index, title: `Chương ${index}`, paragraphs: [content], sourceVersion: updatedAt, updatedAt });
-const payload = (chapters: any[], id = 'source-book', total = 30) => ({ editorBookId: id, book: { title: 'Truyện từ Editor', author: 'Tác giả', totalChapters: total }, chapters });
+const payload = (chapters: any[], id = 'source-book', total = 30, overwriteExisting = false) => ({ editorBookId: id, overwriteExisting, book: { title: 'Truyện từ Editor', author: 'Tác giả', totalChapters: total }, chapters });
 async function workflow(bookId: string, admin: string, beta: string, userId: string) {
   const assignment = (await request(`/admin/books/${bookId}/assign`, admin, { betaUserId: userId })).assignment;
   await request(`/books/${bookId}/chapters/1`, beta);
@@ -116,6 +117,7 @@ try {
   await request('/integrations/editor/sync', secret, payload(Array.from({ length: 26 }, (_, i) => ch(`too-many-${i}`, i + 1))), 400);
   await request('/integrations/editor/sync', secret, payload([ch('dup', 1), ch('dup', 2)]), 400);
   await request('/integrations/editor/sync', secret, payload([ch('dup', 1), ch('dup2', 1)]), 400);
+  await request('/integrations/editor/sync', secret, { ...payload([ch('invalid-overwrite', 1)]), overwriteExisting: 'yes' }, 400);
   check(true, 'Batch limits, duplicate identity/order and forged client hashes rejected');
   const validHash = ch('hash-source', 1); delete (validHash as any).sourceVersion;
   (validHash as any).contentHash = sourceHash(validHash.title, validHash.paragraphs);
@@ -143,6 +145,14 @@ try {
   check(append.results[0].status === 'CREATED' && append.totalChapters === 31 && append.syncState === 'CONFLICT', 'Append works during Beta; previous conflict is not hidden');
   const unreadConflict = await request('/integrations/editor/sync', secret, payload([ch('chapter-2', 2, 'Different', timestamp(2))]));
   check(unreadConflict.results[0].reason === 'BOOK_ALREADY_ASSIGNED', 'Conservative cache safety locks source after assignment');
+  const overwritten = await request('/integrations/editor/sync', secret, payload([ch('chapter-1', 1, 'Nội dung nguồn đã sửa hoàn chỉnh', timestamp(6))], 'source-book', 31, true));
+  check(overwritten.results[0].status === 'OVERWRITTEN' && overwritten.results[0].betaChapterId === firstIds[0] && overwritten.results[0].contentVersion === 4, 'Explicit overwrite replaces source while preserving chapter identity');
+  const overwrittenChapter = await queryOne<any>('SELECT paragraphs FROM beta_chapters WHERE id = ?', firstIds[0]);
+  const overwrittenParagraphs = Array.isArray(overwrittenChapter.paragraphs) ? overwrittenChapter.paragraphs : JSON.parse(overwrittenChapter.paragraphs);
+  check(overwrittenParagraphs[0] === 'Nội dung nguồn đã sửa hoàn chỉnh', 'Overwritten chapter stores the amended Editor content');
+  check((await queryAll('SELECT * FROM beta_edits WHERE chapter_id = ?', firstIds[0])).length === 0 && (await queryAll('SELECT * FROM beta_notes WHERE chapter_id = ?', firstIds[0])).length === 0 && (await queryAll('SELECT * FROM beta_chapter_reviews WHERE chapter_id = ?', firstIds[0])).length === 0, 'Overwrite removes stale paragraph anchors and approval snapshots for that chapter');
+  const resetStatus = await queryOne<any>('SELECT status, last_scroll_percent, last_scroll_offset FROM beta_chapter_status WHERE chapter_id = ?', firstIds[0]);
+  check(resetStatus.status === 'NOT_STARTED' && Number(resetStatus.last_scroll_percent) === 0 && Number(resetStatus.last_scroll_offset) === 0, 'Overwrite resets only the affected chapter workflow');
   // 305 real synthetic source rows, selected five bodies only.
   let largeBookId = '';
   for (let offset = 0; offset < 305; offset += 25) {
@@ -178,7 +188,7 @@ try {
   const reopened = await request(`/admin/books/${largeBookId}/approved-export/export`, admin, { assignmentId: largeAssignment.id, chapters: [{ id: selected5[0].id, snapshotVersion: selected5[0].snapshotVersion }] });
   check(!!reopened.chapters[0].error, 'Reopened approved chapter is blocked from export');
   const state = await request('/integrations/editor/books/source-book', secret);
-  check(state.chapters.length === 31 && state.chapters[0].syncStatus === 'SOURCE_CONFLICT' && !JSON.stringify(state).includes('paragraphs'), 'Status checkpoint is metadata-only and carries unresolved conflict');
+  check(state.chapters.length === 31 && state.chapters[0].syncStatus === 'SYNCED' && !JSON.stringify(state).includes('paragraphs'), 'Status checkpoint is metadata-only and reflects successful overwrite');
   check(JSON.stringify(await queryAll('SELECT * FROM beta_chapters WHERE book_id = ?', manual.id)) === manualBefore, 'Manual book remains untouched by every integration operation');
   if (process.env.SYNC_TEST_PGLITE === 'true') {
     const { getAdapter } = await import('../server/db/database.js');
@@ -192,7 +202,8 @@ try {
 
   // The optional bridge test calls the real Editor server implementation against this real LilyBeta API.
   if (process.env.EDITOR_SYNC_TEST_CHECKOUT) {
-    const { createLilyBetaSyncHandler } = await import(`${process.env.EDITOR_SYNC_TEST_CHECKOUT}/server/lilybetaSync.js`);
+    const editorServerUrl = pathToFileURL(join(process.env.EDITOR_SYNC_TEST_CHECKOUT, 'server', 'lilybetaSync.js')).href;
+    const { createLilyBetaSyncHandler } = await import(editorServerUrl);
     const projectId = '11111111-1111-4111-8111-111111111111';
     const chapterId = '22222222-2222-4222-8222-222222222222';
     const userId = '33333333-3333-4333-8333-333333333333';

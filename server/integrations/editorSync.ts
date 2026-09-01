@@ -9,7 +9,7 @@ export interface ChapterSyncResult {
   editorChapterId: string;
   betaChapterId: string | null;
   betaChapterIndex: number | null;
-  status: 'CREATED' | 'UPDATED' | 'ALREADY_SYNCED' | 'SOURCE_CONFLICT' | 'STALE_SOURCE' | 'SOURCE_VERSION_CONFLICT';
+  status: 'CREATED' | 'UPDATED' | 'OVERWRITTEN' | 'ALREADY_SYNCED' | 'SOURCE_CONFLICT' | 'STALE_SOURCE' | 'SOURCE_VERSION_CONFLICT';
   contentVersion?: number;
   contentHash?: string;
   sourceHash?: string;
@@ -106,15 +106,24 @@ async function syncTransaction(tx: DatabaseAdapter, input: SyncInput) {
         EXISTS (SELECT 1 FROM beta_chapter_reviews WHERE chapter_id = ?)`, existing.beta_chapter_id, existing.beta_chapter_id, book.id, existing.chapter_index, existing.beta_chapter_id);
       // Deliberately conservative: existing clients can hold old cached text without a status row.
       // Freeze source after any assignment (even revoked), avoiding anchor races without changing old APIs.
-      if (work || assigned) {
+      if ((work || assigned) && !input.overwriteExisting) {
         await tx.run("UPDATE editor_chapter_links SET last_sync_status = 'SOURCE_CONFLICT' WHERE id = ?", existing.id);
         results.push({ ...result, status: 'SOURCE_CONFLICT', reason: work ? 'BETA_WORK_EXISTS' : 'BOOK_ALREADY_ASSIGNED' });
         continue;
       }
+      if (input.overwriteExisting) {
+        // Paragraph offsets, approvals and cached progress refer to the old source body.
+        // Reset only this chapter's Beta work so stale anchors can never be applied to new text.
+        await tx.run('DELETE FROM beta_chapter_reviews WHERE chapter_id = ?', existing.beta_chapter_id);
+        await tx.run('DELETE FROM beta_notes WHERE chapter_id = ?', existing.beta_chapter_id);
+        await tx.run('DELETE FROM beta_edits WHERE chapter_id = ?', existing.beta_chapter_id);
+        await tx.run(`UPDATE beta_chapter_status SET status = 'NOT_STARTED', started_at = NULL, ready_at = NULL, completed_at = NULL, last_scroll_percent = 0, last_scroll_offset = 0, updated_at = ? WHERE chapter_id = ?`, now, existing.beta_chapter_id);
+        await tx.run("UPDATE beta_assignments SET status = 'ACTIVE' WHERE book_id = ? AND status = 'COMPLETED'", book.id);
+      }
       const hash = ChapterService.computeContentHash(chapter.paragraphs);
       const words = chapter.paragraphs.reduce((sum, p) => sum + (p.trim() ? p.trim().split(/\s+/u).length : 0), 0);
       await tx.run(`UPDATE beta_chapters SET title = ?, paragraphs = ?, word_count = ?, content_version = content_version + 1, content_hash = ?, updated_at = ? WHERE id = ?`, chapter.title, JSON.stringify(chapter.paragraphs), words, hash, now, existing.beta_chapter_id);
-      result.status = 'UPDATED';
+      result.status = input.overwriteExisting ? 'OVERWRITTEN' : 'UPDATED';
       result.contentVersion = existing.content_version + 1;
       result.contentHash = hash;
       result.sourceHash = chapter.contentHash;
@@ -128,11 +137,11 @@ async function syncTransaction(tx: DatabaseAdapter, input: SyncInput) {
   const total = Math.max(Number(link.source_total_chapters || 0), input.book.totalChapters || 0) || null;
   const conflict = await tx.queryOne("SELECT id FROM editor_chapter_links WHERE book_link_id = ? AND last_sync_status <> 'SYNCED' LIMIT 1", link.id);
   const state = conflict ? 'CONFLICT' : total !== null && count === total ? 'SYNCED' : 'PARTIAL';
-  const changed = results.some(r => r.status === 'CREATED' || r.status === 'UPDATED');
+  const changed = results.some(r => ['CREATED', 'UPDATED', 'OVERWRITTEN'].includes(r.status));
   if (changed) {
     await tx.run('UPDATE beta_books SET total_chapters = ?, word_count = ?, updated_at = ? WHERE id = ?', count, Number(totals.words), now, book.id);
-    await tx.run('UPDATE beta_assignment_progress SET overall_percentage = 100.0 * completed_chapters_count / ?, updated_at = ? WHERE book_id = ?', count, now, book.id);
-    await tx.run('INSERT INTO beta_activity_logs (id, user_id, action, book_id, details, created_at) VALUES (?, ?, ?, ?, ?, ?)', `log-${randomUUID()}`, admin.id, 'EDITOR_SYNC', book.id, JSON.stringify({ created: results.filter(r => r.status === 'CREATED').length, updated: results.filter(r => r.status === 'UPDATED').length }), now);
+    await tx.run(`UPDATE beta_assignment_progress SET completed_chapters_count = (SELECT COUNT(*) FROM beta_chapter_status s WHERE s.assignment_id = beta_assignment_progress.assignment_id AND s.status = 'COMPLETED'), overall_percentage = 100.0 * (SELECT COUNT(*) FROM beta_chapter_status s WHERE s.assignment_id = beta_assignment_progress.assignment_id AND s.status = 'COMPLETED') / ?, updated_at = ? WHERE book_id = ?`, count, now, book.id);
+    await tx.run('INSERT INTO beta_activity_logs (id, user_id, action, book_id, details, created_at) VALUES (?, ?, ?, ?, ?, ?)', `log-${randomUUID()}`, admin.id, 'EDITOR_SYNC', book.id, JSON.stringify({ created: results.filter(r => r.status === 'CREATED').length, updated: results.filter(r => r.status === 'UPDATED').length, overwritten: results.filter(r => r.status === 'OVERWRITTEN').length }), now);
   }
   await tx.run('UPDATE editor_book_links SET source_total_chapters = ?, sync_state = ?, last_synced_at = ?, updated_at = ? WHERE id = ?', total, state, now, now, link.id);
   return { betaBookId: book.id as string, createdBook, sourceType: 'EDITOR_SYNC', syncState: state, totalChapters: count, sourceTotalChapters: total, results };

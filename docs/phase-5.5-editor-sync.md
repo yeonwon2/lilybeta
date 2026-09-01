@@ -50,7 +50,8 @@ Content-Type: application/json
 - Only initial book title/author are copied. Later sync updates chapters and counts; it does not overwrite an Admin's book metadata.
 - Business conflicts return HTTP 200 with **per-chapter results**; clients must inspect every result. Valid siblings commit, conflicted chapter content does not change. Malformed requests/identity collisions roll back the entire batch.
 - Response: `betaBookId`, `createdBook`, `sourceType`, `syncState`, `totalChapters`, `sourceTotalChapters`, `results[]`. Each result includes source ID, target ID/index, status, accepted content version/hash and reason when blocked.
-- Statuses: `CREATED`, `UPDATED`, `ALREADY_SYNCED`, `STALE_SOURCE`, `SOURCE_VERSION_CONFLICT`, `SOURCE_CONFLICT`. Same source text/title does not increase content version. An older timestamp cannot overwrite newer source. Same timestamp/version with different content is rejected. Conflict markers persist so later successful batches do not hide unresolved conflicts.
+- Optional top-level `overwriteExisting: true` explicitly replaces mapped chapters and returns `OVERWRITTEN`. Because paragraph anchors no longer match, LilyBeta deletes edits, notes and approval snapshots and resets workflow progress only for each overwritten chapter. The default is `false`.
+- Statuses: `CREATED`, `UPDATED`, `OVERWRITTEN`, `ALREADY_SYNCED`, `STALE_SOURCE`, `SOURCE_VERSION_CONFLICT`, `SOURCE_CONFLICT`. Same source text/title does not increase content version. An older timestamp cannot overwrite newer source. Same timestamp/version with different content is rejected. Conflict markers persist so later successful batches do not hide unresolved conflicts.
 
 ```
 GET /api/integrations/editor/books/:editorBookId
@@ -67,7 +68,7 @@ Beta indices remain dense and stable. Sending just source chapter 13 first creat
 
 Source changes are refused if a chapter has edits (including deleted edits/history), notes, active chapter status or review/approval records.
 
-Additionally, v1 takes a conservative safety boundary: **once a book has ever been assigned, existing source chapters are frozen**, even if a chapter still appears unread. Existing readers can retain old text in cache and send edits without a content-version precondition. Allowing source replacement at that point would require changing old reader/write semantics, which this additive phase must not do. Result is `SOURCE_CONFLICT` / `BOOK_ALREADY_ASSIGNED`; unassigned chapters can update safely, and **new chapters can still append during Beta**. No force-overwrite or automatic anchor migration endpoint exists.
+By default, once a book has ever been assigned, existing source chapters are frozen and return `SOURCE_CONFLICT` / `BOOK_ALREADY_ASSIGNED`. An explicit `overwriteExisting: true` request overrides that protection and resets the affected chapter's stale Beta work; new chapters can still append normally.
 
 PostgreSQL sync uses a transaction-scoped advisory lock for `(editor_source, editor_book_id)`, unique relational keys, and a `FOR UPDATE` lock on the target book. The book lock also serializes with assignment FK insertion. Lock/statement timeouts apply only inside the sync transaction. SQLite integration requests use a local queue; SQLite is not the production concurrency model.
 
