@@ -18,5 +18,5 @@ const css = readFileSync('src/index.css','utf8');
 const watermarkRule = css.match(/\.reader-watermark\s*\{([^}]+)\}/)?.[1];
 assert.ok(watermarkRule);
 assert.doesNotMatch(watermarkRule!, /opacity\s*:/, 'Do not multiply label opacity by container opacity');
-assert.match(watermark, /opacity: 0.10/);
+assert.match(watermark, /opacity: 0.04/);
 assert.match(watermark, /z-\[60\]/);

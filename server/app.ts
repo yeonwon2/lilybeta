@@ -89,6 +89,7 @@ export const createApp = () => {
 
   // Phase 4: Admin Review & Chapter Approval routes
   app.get('/api/admin/books/:id/review', requireAuth, requireAdmin, asyncHandler(reviewController.getBookReviewOverview));
+  app.patch('/api/admin/books/:id/chapters/:index/title', requireAuth, requireAdmin, asyncHandler(reviewController.updateChapterTitle));
   app.get('/api/admin/books/:id/assignments/:assignmentId/chapters/:index/review', requireAuth, requireAdmin, asyncHandler(reviewController.getChapterReviewDetail));
   app.post('/api/admin/books/:id/assignments/:assignmentId/chapters/:index/accept-pending', requireAuth, requireAdmin, asyncHandler(acceptPendingEdits));
   app.post('/api/admin/edits/:editId/reviews', requireAuth, requireAdmin, asyncHandler(reviewController.createEditReview));

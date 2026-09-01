@@ -30,6 +30,7 @@ import {
   Send,
   Loader2,
   FileCheck,
+  Pencil,
 } from 'lucide-react';
 
 interface AdminReviewWorkspaceProps {
@@ -73,6 +74,7 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [approveError, setApproveError] = useState<string | null>(null);
+  const [isRenamingChapter, setIsRenamingChapter] = useState(false);
 
   // 1. Fetch Book Overview (Assignments and Chapter List)
   const fetchOverview = async () => {
@@ -249,6 +251,25 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
     }
   };
 
+  const handleRenameChapter = async () => {
+    if (!chapterData || isRenamingChapter) return;
+    const nextTitle = window.prompt('Nhập tên chương mới:', chapterData.chapter.title);
+    if (nextTitle === null || nextTitle.trim() === chapterData.chapter.title) return;
+    if (!nextTitle.trim()) {
+      alert('Tên chương không được để trống.');
+      return;
+    }
+    try {
+      setIsRenamingChapter(true);
+      await api.patch(`/admin/books/${bookId}/chapters/${currentChapterIndex}/title`, { title: nextTitle.trim() });
+      await Promise.all([fetchChapterDetail(selectedAssignmentId, currentChapterIndex), fetchOverview()]);
+    } catch (err: any) {
+      alert(err.message || 'Không thể đổi tên chương');
+    } finally {
+      setIsRenamingChapter(false);
+    }
+  };
+
   if (isLoadingOverview && !bookOverview) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
@@ -324,6 +345,16 @@ export const AdminReviewWorkspace: React.FC<AdminReviewWorkspaceProps> = ({
                   );
                 })}
               </select>
+              <button
+                type="button"
+                disabled={!chapterData || isLoadingChapter || isRenamingChapter}
+                onClick={handleRenameChapter}
+                className="p-1.5 rounded-xl text-ink-600 hover:bg-white disabled:opacity-30 transition"
+                title="Sửa tên chương"
+                aria-label="Sửa tên chương"
+              >
+                {isRenamingChapter ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+              </button>
               <button
                 disabled={currentChapterIndex >= (bookOverview?.book?.totalChapters || 1)}
                 onClick={() => setCurrentChapterIndex((prev) => prev + 1)}

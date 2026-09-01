@@ -125,6 +125,27 @@ const runReviewSecurityTests = async () => {
     assert(assignRes.status === 200, 'Assign book to Beta A returns 200 OK');
     const assignment = (await assignRes.json()).assignment;
 
+    const forbiddenRenameRes = await fetch(`${baseUrl}/api/admin/books/${book.id}/chapters/1/title`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenB}` },
+      body: JSON.stringify({ title: 'Tên không được phép' }),
+    });
+    assert(forbiddenRenameRes.status === 403, 'Beta Reader cannot rename chapters');
+    const emptyRenameRes = await fetch(`${baseUrl}/api/admin/books/${book.id}/chapters/1/title`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ title: '   ' }),
+    });
+    assert(emptyRenameRes.status === 400, 'Empty chapter title is rejected');
+    const renameRes = await fetch(`${baseUrl}/api/admin/books/${book.id}/chapters/1/title`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ title: 'Chương 1: Khởi Đầu Mới' }),
+    });
+    assert(renameRes.status === 200, 'Admin can rename a chapter');
+    const renamedChapter = (await renameRes.json()).chapter;
+    assert(renamedChapter.title === 'Chương 1: Khởi Đầu Mới' && renamedChapter.contentVersion === 2, 'Rename returns new title and invalidates cached chapter metadata');
+
     // 4. Beta A creates an Edit (Revision 1)
     console.log('\n[Phase 4] Beta A creates Edit (Revision 1)');
     const createEditRes = await fetch(`${baseUrl}/api/books/${book.id}/chapters/1/edits`, {
@@ -161,7 +182,7 @@ const runReviewSecurityTests = async () => {
       const html = renderToStaticMarkup(createElement(ReviewChapterContent, {
         chapterData: reviewDetail, contentLayer, selectedEdit: null, onSelectEdit: () => {},
       }));
-      assert(html.includes('Chương 1: Khởi Đầu'), `${contentLayer}: chapter title renders`);
+      assert(html.includes('Chương 1: Khởi Đầu Mới'), `${contentLayer}: renamed chapter title renders`);
       assert(html.includes('Gió thổi qua rặng liễu ven hồ.'), `${contentLayer}: API paragraphs render without crashing`);
       assert(html.includes(contentLayer === 'working' ? 'Chàng' : 'Hắn'), `${contentLayer}: correct original/proposed text`);
     }

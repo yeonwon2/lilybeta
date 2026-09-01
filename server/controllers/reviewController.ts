@@ -1,8 +1,38 @@
 import type { ChapterReviewDetailResponse } from '../../src/beta-review/reviewTypes.js';
+import { randomUUID } from 'node:crypto';
 import { Request, Response } from 'express';
 import { queryAll, queryOne, run, transaction } from '../db/database.js';
 import { buildApprovedChapter, checkAcceptedOverlaps, ApprovedVersionConflictError } from '../../src/beta-review/approvedVersion.js';
 import { AcceptedRevisionItem, ChapterReviewStatus, DerivedReviewStatus } from '../../src/beta-review/reviewTypes.js';
+
+export const updateChapterTitle = async (req: Request, res: Response): Promise<void> => {
+  const { id, index } = req.params;
+  const chapterIndex = Number(index);
+  const title = typeof req.body?.title === 'string' ? req.body.title.trim() : '';
+  if (!Number.isSafeInteger(chapterIndex) || chapterIndex < 1) {
+    res.status(400).json({ error: 'Chỉ số chương không hợp lệ', code: 'INVALID_CHAPTER_INDEX' });
+    return;
+  }
+  if (!title || title.length > 500 || /[\r\n]/.test(title)) {
+    res.status(400).json({ error: 'Tên chương cần từ 1–500 ký tự và nằm trên một dòng', code: 'INVALID_CHAPTER_TITLE' });
+    return;
+  }
+  const chapter = await queryOne<any>('SELECT id, title, content_version FROM beta_chapters WHERE book_id = ? AND chapter_index = ?', id, chapterIndex);
+  if (!chapter) {
+    res.status(404).json({ error: 'Không tìm thấy chương', code: 'CHAPTER_NOT_FOUND' });
+    return;
+  }
+  if (chapter.title === title) {
+    res.json({ chapter: { id: chapter.id, index: chapterIndex, title, contentVersion: chapter.content_version } });
+    return;
+  }
+  const now = new Date().toISOString();
+  await transaction(async tx => {
+    await tx.run('UPDATE beta_chapters SET title = ?, content_version = content_version + 1, updated_at = ? WHERE id = ?', title, now, chapter.id);
+    await tx.run('INSERT INTO beta_activity_logs (id, user_id, action, book_id, chapter_id, details, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', `log-title-${randomUUID()}`, req.user!.id, 'CHAPTER_TITLE_UPDATED', id, chapter.id, JSON.stringify({ chapterIndex, oldTitle: chapter.title, newTitle: title }), now);
+  });
+  res.json({ chapter: { id: chapter.id, index: chapterIndex, title, contentVersion: Number(chapter.content_version || 1) + 1 } });
+};
 
 /**
  * Review Controller for LilyBeta Phase 4 & Phase 5
