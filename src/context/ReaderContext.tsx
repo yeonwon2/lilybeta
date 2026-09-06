@@ -67,6 +67,7 @@ interface ReaderContextType {
   isLoadingChapter: boolean;
   readerError: string | null;
   isToolbarVisible: boolean;
+  setIsToolbarVisible: (visible: boolean) => void;
   isAaPanelOpen: boolean;
   isThemePanelOpen: boolean;
   isTocOpen: boolean;
@@ -552,6 +553,7 @@ export const ReaderProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         isLoadingChapter,
         readerError,
         isToolbarVisible,
+        setIsToolbarVisible,
         isAaPanelOpen,
         isThemePanelOpen,
         isTocOpen,

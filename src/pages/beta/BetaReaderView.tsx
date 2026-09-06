@@ -52,6 +52,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
     nextChapter,
     prevChapter,
     toggleToolbar,
+    setIsToolbarVisible,
     triggerAutosave,
     setIsConfirmCompleteOpen,
     initReader,
@@ -63,6 +64,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
   } = useReader();
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastScrollYRef = useRef<number>(0);
   const [editingParagraphIndex, setEditingParagraphIndex] = useState<number | null>(null);
   const [editingDraft, setEditingDraft] = useState<string>('');
 
@@ -76,20 +78,35 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
     setEditingParagraphIndex(null);
   }, [currentChapterIndex]);
 
-  // Autosave scroll tracking
+  // Autosave scroll tracking + scroll-direction toolbar visibility (scroll down to
+  // read hides the header/footer, scroll up brings them back — like most reader apps).
   useEffect(() => {
+    lastScrollYRef.current = window.scrollY;
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (scrollHeight <= 0) return;
 
-      const scrollPercent = Math.min(100, Math.max(0, (scrollY / scrollHeight) * 100));
-      triggerAutosave(scrollPercent, scrollY);
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight > 0) {
+        const scrollPercent = Math.min(100, Math.max(0, (scrollY / scrollHeight) * 100));
+        triggerAutosave(scrollPercent, scrollY);
+      }
+
+      const delta = scrollY - lastScrollYRef.current;
+      const SCROLL_THRESHOLD = 8;
+      if (scrollY <= 24) {
+        setIsToolbarVisible(true);
+      } else if (delta > SCROLL_THRESHOLD) {
+        setIsToolbarVisible(false);
+      } else if (delta < -SCROLL_THRESHOLD) {
+        setIsToolbarVisible(true);
+      }
+      lastScrollYRef.current = scrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [triggerAutosave]);
+  }, [triggerAutosave, setIsToolbarVisible]);
 
   // Handle click on reading area to toggle toolbar
   const handleContentClick = () => {
