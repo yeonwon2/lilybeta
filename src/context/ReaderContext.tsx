@@ -138,7 +138,7 @@ export const ReaderProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [viewMode, setViewMode] = useState<'working' | 'original'>('working');
 
   // Floating panels state
-  const [isToolbarVisible, setIsToolbarVisible] = useState<boolean>(false);
+  const [isToolbarVisible, setIsToolbarVisible] = useState<boolean>(true);
   const [isAaPanelOpen, setIsAaPanelOpen] = useState<boolean>(false);
   const [isThemePanelOpen, setIsThemePanelOpen] = useState<boolean>(false);
   const [isTocOpen, setIsTocOpen] = useState<boolean>(false);
