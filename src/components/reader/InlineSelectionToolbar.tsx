@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Edit3, MessageSquare, AlertCircle } from 'lucide-react';
+import { MessageSquare, AlertCircle } from 'lucide-react';
 
 export interface SelectionRangeInfo {
   paragraphIndex: number;
@@ -10,12 +10,10 @@ export interface SelectionRangeInfo {
 }
 
 interface InlineSelectionToolbarProps {
-  onOpenEdit: (range: SelectionRangeInfo) => void;
   onOpenNote: (range: SelectionRangeInfo) => void;
 }
 
 export const InlineSelectionToolbar: React.FC<InlineSelectionToolbarProps> = ({
-  onOpenEdit,
   onOpenNote,
 }) => {
   const [selectionInfo, setSelectionInfo] = useState<SelectionRangeInfo | null>(null);
@@ -120,21 +118,6 @@ export const InlineSelectionToolbar: React.FC<InlineSelectionToolbarProps> = ({
         </div>
       ) : (
         <div className="bg-ink-950/95 backdrop-blur-md text-white rounded-2xl shadow-xl border border-white/15 p-2 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              onOpenEdit(selectionInfo);
-              window.getSelection()?.removeAllRanges();
-              setSelectionInfo(null);
-            }}
-            className="flex-1 min-h-12 flex justify-center items-center gap-2 px-4 py-3 rounded-xl hover:bg-white/20 text-sm font-semibold transition"
-          >
-            <Edit3 className="w-3.5 h-3.5 text-purple-300" />
-            <span>Sửa</span>
-          </button>
-
-          <div className="w-px h-3.5 bg-white/20" />
-
           <button
             type="button"
             onClick={() => {

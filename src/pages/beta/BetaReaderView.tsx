@@ -1,4 +1,3 @@
-import { blockManuscriptTransfer } from '../../components/reader/contentProtection';
 import React, { useEffect, useRef } from 'react';
 import { 
   Loader2, 
@@ -101,6 +100,20 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) return;
     toggleToolbar();
+  };
+
+  // Click directly on a paragraph to propose an edit — no need to select text first.
+  const handleParagraphClick = (e: React.MouseEvent<HTMLParagraphElement>, pIdx: number, originalText: string) => {
+    e.stopPropagation();
+    setActiveSelectionRange({
+      paragraphIndex: pIdx,
+      startOffset: 0,
+      endOffset: originalText.length,
+      selectedText: originalText,
+      rect: e.currentTarget.getBoundingClientRect(),
+    });
+    setSelectedEdit(null);
+    setIsEditSheetOpen(true);
   };
 
   // If unauthorized / IDOR barrier
@@ -240,15 +253,11 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`min-h-screen transition-colors duration-200 ${activeTheme.className} reader-deterrence`}
-      style={{ 
-        backgroundColor: 'var(--reader-bg)', 
+      className={`min-h-screen transition-colors duration-200 ${activeTheme.className}`}
+      style={{
+        backgroundColor: 'var(--reader-bg)',
         color: 'var(--reader-text)',
       }}
-      onCopy={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}
-      onCut={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}
-      onDragStart={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}
-      onContextMenu={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}
       onClick={handleContentClick}
     >
       {/* Floating Toolbars */}
@@ -260,14 +269,9 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
       <TocDrawer />
       <ConfirmCompleteModal />
 
-      {/* Inline Selection Floating Toolbar */}
+      {/* Inline Selection Floating Toolbar (notes only — editing is a direct paragraph click) */}
       <InlineSelectionToolbar
         key={`${bookId}:${currentChapterIndex}`}
-        onOpenEdit={(range) => {
-          setActiveSelectionRange(range);
-          setSelectedEdit(null);
-          setIsEditSheetOpen(true);
-        }}
         onOpenNote={(range) => {
           setActiveSelectionRange(range);
           setIsNoteModalOpen(true);
@@ -424,11 +428,12 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
             >
               {currentChapter.paragraphs && currentChapter.paragraphs.length > 0 ? (
                 currentChapter.paragraphs.map((p, idx) => (
-                  <p 
-                    key={idx} 
+                  <p
+                    key={idx}
                     data-paragraph-index={idx}
                     data-original-text={p}
-                    className={settings.firstLineIndent ? 'indent-6' : ''}
+                    onClick={(e) => handleParagraphClick(e, idx, p)}
+                    className={`cursor-text rounded-md transition hover:bg-purple-500/5 ${settings.firstLineIndent ? 'indent-6' : ''}`}
                     style={{ marginBottom: `${(settings.paragraphSpacing - 1) * 1.5}rem` }}
                   >
                     {renderParagraphContent(p, idx)}

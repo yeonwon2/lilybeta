@@ -2,17 +2,24 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const reader = readFileSync('src/pages/beta/BetaReaderView.tsx','utf8');
 const toolbar = readFileSync('src/components/reader/InlineSelectionToolbar.tsx','utf8');
-const protection = readFileSync('src/components/reader/contentProtection.ts','utf8');
 const watermark = readFileSync('src/components/reader/Watermark.tsx','utf8');
-for (const event of ['onCopy','onCut','onDragStart','onContextMenu']) assert.ok(reader.includes(`${event}={e => blockManuscriptTransfer(e, user?.role === 'BETA_READER')}`));
-assert.match(protection,/!field.readOnly && !field.disabled/);
+
+// Copy/cut/drag/context-menu are no longer blocked on the reader page.
+for (const event of ['onCopy','onCut','onDragStart','onContextMenu']) assert.ok(!reader.includes(event));
+assert.doesNotMatch(reader, /reader-deterrence/);
+
+// Editing no longer requires selecting text: a click on a paragraph opens the edit sheet directly.
+assert.match(reader, /handleParagraphClick/);
+assert.match(reader, /onClick=\{\(e\) => handleParagraphClick\(e, idx, p\)\}/);
+assert.doesNotMatch(toolbar, /onOpenEdit/);
+
 assert.match(toolbar,/bottom: 'calc\(env\(safe-area-inset-bottom/);
 assert.doesNotMatch(toolbar,/style=\{\{ top:/);
 assert.match(toolbar,/onPointerDown=\{e => e.preventDefault\(\)\}/);
 assert.match(watermark,/user.username/);
 assert.match(watermark,/pointer-events-none/);
 assert.match(watermark,/user.role !== 'BETA_READER'/);
-console.log('PASS: Beta-only transfer guards, editable exceptions, bottom selection toolbar, non-interactive account watermark');
+console.log('PASS: No copy/selection blocking, click-to-edit paragraphs, bottom note toolbar, non-interactive account watermark');
 
 const css = readFileSync('src/index.css','utf8');
 const watermarkRule = css.match(/\.reader-watermark\s*\{([^}]+)\}/)?.[1];

@@ -198,11 +198,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   text-transform: uppercase;
 }
 
-/* Copy deterrence styling (deterrent, but doesn't break inline selection) */
-.reader-deterrence {
-  -webkit-touch-callout: none;
-}
-
 /* Home-screen app shell: stable viewport without blocking text selection or pinch zoom. */
 html {
   -webkit-text-size-adjust: 100%;
