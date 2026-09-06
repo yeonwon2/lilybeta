@@ -1,10 +1,8 @@
 import React, {useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {InlineSelectionToolbar} from '../../src/components/reader/InlineSelectionToolbar';
 import '../../src/index.css';
 function Test() {
  const [result,setResult]=useState('');
- function select() { const p=document.querySelector('[data-paragraph-index]')!;const r=document.createRange();r.setStart(p.firstChild!,0);r.setEnd(p.firstChild!,3);window.getSelection()!.removeAllRanges();window.getSelection()!.addRange(r); }
  function check() {
   const p=document.querySelector('[data-paragraph-index]')! as HTMLElement;
   const checks=[];
@@ -13,8 +11,7 @@ function Test() {
  }
  return <main className="p-6">
  <h1>Kiểm thử bản thảo giả</h1><p data-paragraph-index="0" data-original-text="Hắn nhìn nàng.">Hắn nhìn nàng.</p>
- <button onClick={select}>Bôi đen mẫu</button><button onClick={check}>Kiểm tra không chặn copy</button><p role="status">{result}</p>
- <InlineSelectionToolbar onOpenNote={r=>setResult(`Ghi chú: ${r.selectedText}`)}/>
+ <button onClick={check}>Kiểm tra không chặn copy</button><p role="status">{result}</p>
  </main>;
 }
 createRoot(document.getElementById('root')!).render(<Test/>);

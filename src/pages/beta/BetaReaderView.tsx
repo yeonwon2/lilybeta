@@ -1,12 +1,12 @@
-import React, { useEffect, useRef } from 'react';
-import { 
-  Loader2, 
-  ChevronLeft, 
-  ChevronRight, 
-  CheckCircle2, 
-  Check, 
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Check,
   ShieldAlert,
-  MessageSquare
+  RotateCcw,
 } from 'lucide-react';
 import { ReaderProvider, useReader } from '../../context/ReaderContext';
 import { ReaderToolbar } from '../../components/reader/ReaderToolbar';
@@ -15,14 +15,8 @@ import { ThemeSelectorSheet } from '../../components/reader/ThemeSelectorSheet';
 import { TocDrawer } from '../../components/reader/TocDrawer';
 import { ConfirmCompleteModal } from '../../components/reader/ConfirmCompleteModal';
 import { Watermark } from '../../components/reader/Watermark';
-import { InlineSelectionToolbar } from '../../components/reader/InlineSelectionToolbar';
-import { EditBottomSheet } from '../../components/reader/EditBottomSheet';
-import { EditDetailModal } from '../../components/reader/EditDetailModal';
-import { RevisionHistoryDrawer } from '../../components/reader/RevisionHistoryDrawer';
-import { NoteModal } from '../../components/reader/NoteModal';
 import { applyEditsToParagraph } from '../../beta-edit/applyEdits';
-import { ERROR_TYPE_LABELS } from '../../beta-edit/editTypes';
-import { useAuth } from '../../context/AuthContext';
+import { BetaEdit } from '../../beta-edit/editTypes';
 
 export interface BetaReaderViewProps {
   bookId: string;
@@ -30,19 +24,29 @@ export interface BetaReaderViewProps {
   onBackToBook: () => void;
 }
 
+// Reconstruct the paragraph's current working text (original + any active edits applied).
+const getWorkingText = (original: string, paraEdits: BetaEdit[]): string => {
+  if (paraEdits.length === 0) return original;
+  try {
+    return applyEditsToParagraph(original, paraEdits).map(seg => seg.text).join('');
+  } catch {
+    return original;
+  }
+};
+
 const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
   bookId,
   initialChapterIndex,
   onBackToBook,
 }) => {
-  const { 
+  const {
     book,
-    currentChapterIndex, 
-    currentChapter, 
-    totalChapters, 
-    settings, 
-    activeTheme, 
-    isLoadingChapter, 
+    currentChapterIndex,
+    currentChapter,
+    totalChapters,
+    settings,
+    activeTheme,
+    isLoadingChapter,
     readerError,
     workflowMap,
     nextChapter,
@@ -52,33 +56,25 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
     setIsConfirmCompleteOpen,
     initReader,
     edits,
-    notes,
     viewMode,
-    activeSelectionRange,
-    setActiveSelectionRange,
-    isEditSheetOpen,
-    setIsEditSheetOpen,
-    isDetailModalOpen,
-    setIsDetailModalOpen,
-    isHistoryDrawerOpen,
-    setIsHistoryDrawerOpen,
-    isNoteModalOpen,
-    setIsNoteModalOpen,
-    selectedEdit,
-    setSelectedEdit,
     saveNewEdit,
     updateExistingEdit,
     revertEdit,
-    saveNote,
   } = useReader();
 
-  const { user } = useAuth();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [editingParagraphIndex, setEditingParagraphIndex] = useState<number | null>(null);
+  const [editingDraft, setEditingDraft] = useState<string>('');
 
   // Initialize reader for book and chapter
   useEffect(() => {
     initReader(bookId, initialChapterIndex);
   }, [bookId, initialChapterIndex]);
+
+  // Close any in-progress edit when switching chapters
+  useEffect(() => {
+    setEditingParagraphIndex(null);
+  }, [currentChapterIndex]);
 
   // Autosave scroll tracking
   useEffect(() => {
@@ -102,18 +98,63 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
     toggleToolbar();
   };
 
-  // Click directly on a paragraph to propose an edit — no need to select text first.
-  const handleParagraphClick = (e: React.MouseEvent<HTMLParagraphElement>, pIdx: number, originalText: string) => {
+  // Click directly on a paragraph to start editing it in place — no selection needed.
+  const handleStartEditing = (e: React.MouseEvent, pIdx: number, original: string, paraEdits: BetaEdit[]) => {
     e.stopPropagation();
-    setActiveSelectionRange({
-      paragraphIndex: pIdx,
-      startOffset: 0,
-      endOffset: originalText.length,
-      selectedText: originalText,
-      rect: e.currentTarget.getBoundingClientRect(),
-    });
-    setSelectedEdit(null);
-    setIsEditSheetOpen(true);
+    setEditingDraft(getWorkingText(original, paraEdits));
+    setEditingParagraphIndex(pIdx);
+  };
+
+  // Auto-save the paragraph on blur: diff against the baseline and persist as one edit.
+  const handleFinishEditing = async (pIdx: number, original: string, paraEdits: BetaEdit[]) => {
+    const draft = editingDraft;
+    setEditingParagraphIndex(null);
+
+    const baseline = getWorkingText(original, paraEdits);
+    const cleanDraft = draft.trim();
+    if (!cleanDraft || cleanDraft === baseline.trim()) return;
+
+    try {
+      const wholeParagraphEdit = paraEdits.length === 1 && paraEdits[0].startOffset === 0 && paraEdits[0].endOffset === original.length
+        ? paraEdits[0]
+        : null;
+
+      if (wholeParagraphEdit) {
+        if (cleanDraft === original.trim()) {
+          await revertEdit(wholeParagraphEdit);
+        } else {
+          await updateExistingEdit(wholeParagraphEdit.id, {
+            proposedText: cleanDraft,
+            errorType: wholeParagraphEdit.errorType || 'OTHER',
+            reason: wholeParagraphEdit.reason,
+            expectedVersion: wholeParagraphEdit.version,
+          });
+        }
+      } else {
+        // No edit yet, or legacy partial-range edits — consolidate into one whole-paragraph edit.
+        for (const edit of paraEdits) {
+          await revertEdit(edit);
+        }
+        if (cleanDraft !== original.trim()) {
+          await saveNewEdit({
+            paragraphIndex: pIdx,
+            startOffset: 0,
+            endOffset: original.length,
+            originalText: original,
+            proposedText: cleanDraft,
+            errorType: 'OTHER',
+          });
+        }
+      }
+    } catch (err: any) {
+      alert(err?.message || 'Không thể lưu chỉnh sửa, vui lòng thử lại.');
+    }
+  };
+
+  const resizeTextarea = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
   };
 
   // If unauthorized / IDOR barrier
@@ -150,14 +191,11 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
   const currentWorkflow = workflowMap[currentChapterIndex];
   const isCompleted = currentWorkflow?.status === 'COMPLETED';
 
-  // Render a paragraph according to viewMode (Working vs Original)
-  const renderParagraphContent = (p: string, pIdx: number) => {
+  // Render a paragraph's edited segments with a status color per review state
+  const renderParagraphContent = (p: string, paraEdits: BetaEdit[]) => {
     if (viewMode === 'original') {
       return p;
     }
-
-    const paraEdits = edits.filter(e => e.paragraphIndex === pIdx && e.status === 'ACTIVE');
-    const paraNotes = notes.filter(n => n.paragraphIndex === pIdx);
 
     try {
       const segments = applyEditsToParagraph(p, paraEdits);
@@ -171,7 +209,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
 
             const edit = seg.edit;
             const reviewStatus = edit.reviewStatus || 'PENDING';
-            let styleClass = 'border-b-2 border-purple-500/80 bg-purple-500/10 hover:bg-purple-500/25 text-purple-950';
+            let styleClass = 'border-b-2 border-purple-500/80 bg-purple-500/10 text-purple-950';
             let statusDot = (
               <span
                 className="inline-block w-1.5 h-1.5 rounded-full bg-purple-500 ml-1 align-middle"
@@ -180,7 +218,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
             );
 
             if (reviewStatus === 'ACCEPTED') {
-              styleClass = 'border-b-2 border-emerald-500/80 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-950';
+              styleClass = 'border-b-2 border-emerald-500/80 bg-emerald-500/10 text-emerald-950';
               statusDot = (
                 <span
                   className="inline-block text-[10px] text-emerald-600 font-bold ml-1 align-middle"
@@ -190,7 +228,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
                 </span>
               );
             } else if (reviewStatus === 'CHANGES_REQUESTED') {
-              styleClass = 'border-b-2 border-amber-500 bg-amber-500/15 hover:bg-amber-500/25 text-amber-950';
+              styleClass = 'border-b-2 border-amber-500 bg-amber-500/15 text-amber-950';
               statusDot = (
                 <span
                   className="inline-block text-[10px] text-amber-600 font-bold ml-1 align-middle"
@@ -200,7 +238,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
                 </span>
               );
             } else if (reviewStatus === 'REJECTED') {
-              styleClass = 'border-b-2 border-rose-400/60 bg-rose-400/10 hover:bg-rose-400/20 text-rose-900 line-through opacity-80';
+              styleClass = 'border-b-2 border-rose-400/60 bg-rose-400/10 text-rose-900 line-through opacity-80';
               statusDot = (
                 <span
                   className="inline-block text-[10px] text-rose-500 font-bold ml-1 align-middle"
@@ -214,34 +252,14 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
             return (
               <span
                 key={edit.id || sIdx}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedEdit(edit);
-                  setIsDetailModalOpen(true);
-                }}
-                className={`cursor-pointer px-0.5 rounded transition inline-block font-medium select-text ${styleClass}`}
-                title={`Đã sửa (${ERROR_TYPE_LABELS[edit.errorType] || edit.errorType}): ${edit.originalText} → ${edit.currentText} [${reviewStatus}]`}
+                className={`px-0.5 rounded inline-block font-medium ${styleClass}`}
+                title={`Đã sửa: "${edit.originalText}" → "${edit.currentText}" [${reviewStatus}]`}
               >
                 {seg.text}
                 {statusDot}
               </span>
             );
           })}
-
-          {/* Paragraph notes badge */}
-          {paraNotes.length > 0 && (
-            <span
-              className="inline-flex items-center gap-0.5 ml-2 px-1.5 py-0.5 rounded-md bg-amber-100/80 text-amber-800 text-[10px] font-sans font-bold align-middle cursor-pointer hover:bg-amber-200 transition"
-              title={`${paraNotes.length} ghi chú trong đoạn này: ${paraNotes.map(n => n.note).join('; ')}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                alert(`Ghi chú đoạn ${pIdx + 1}:\n` + paraNotes.map((n, i) => `${i + 1}. ${n.note}`).join('\n'));
-              }}
-            >
-              <MessageSquare className="w-3 h-3" />
-              <span>{paraNotes.length}</span>
-            </span>
-          )}
         </>
       );
     } catch (err) {
@@ -251,7 +269,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`min-h-screen transition-colors duration-200 ${activeTheme.className}`}
       style={{
@@ -269,97 +287,11 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
       <TocDrawer />
       <ConfirmCompleteModal />
 
-      {/* Inline Selection Floating Toolbar (notes only — editing is a direct paragraph click) */}
-      <InlineSelectionToolbar
-        key={`${bookId}:${currentChapterIndex}`}
-        onOpenNote={(range) => {
-          setActiveSelectionRange(range);
-          setIsNoteModalOpen(true);
-        }}
-      />
-
-      {/* Edit Bottom Sheet / Modal */}
-      <EditBottomSheet
-        isOpen={isEditSheetOpen}
-        onClose={() => {
-          setIsEditSheetOpen(false);
-          setActiveSelectionRange(null);
-          setSelectedEdit(null);
-        }}
-        selectionRange={activeSelectionRange}
-        existingEdit={selectedEdit}
-        onSaveEdit={async (data) => {
-          if (selectedEdit) {
-            await updateExistingEdit({
-              proposedText: data.proposedText,
-              errorType: data.errorType,
-              reason: data.reason,
-              expectedVersion: data.expectedVersion,
-            });
-          } else {
-            await saveNewEdit(data);
-          }
-        }}
-        userId={user?.id}
-        bookId={book?.id}
-        chapterIndex={currentChapterIndex}
-      />
-
-      {/* Edit Detail View */}
-      <EditDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => {
-          setIsDetailModalOpen(false);
-          setSelectedEdit(null);
-        }}
-        edit={selectedEdit}
-        onEditAgain={(edit) => {
-          setIsDetailModalOpen(false);
-          setSelectedEdit(edit);
-          setIsEditSheetOpen(true);
-        }}
-        onViewHistory={(edit) => {
-          setIsDetailModalOpen(false);
-          setSelectedEdit(edit);
-          setIsHistoryDrawerOpen(true);
-        }}
-        onRevertEdit={async (edit) => {
-          if (confirm('Bạn có chắc muốn hoàn tác chỉnh sửa này và đưa về nguyên tác?')) {
-            await revertEdit(edit);
-          }
-        }}
-      />
-
-      {/* Revision History Drawer */}
-      <RevisionHistoryDrawer
-        isOpen={isHistoryDrawerOpen}
-        onClose={() => {
-          setIsHistoryDrawerOpen(false);
-          setSelectedEdit(null);
-        }}
-        edit={selectedEdit}
-        bookId={book?.id || ''}
-        chapterIndex={currentChapterIndex}
-      />
-
-      {/* Selection Note Modal */}
-      <NoteModal
-        isOpen={isNoteModalOpen}
-        onClose={() => {
-          setIsNoteModalOpen(false);
-          setActiveSelectionRange(null);
-        }}
-        selectionRange={activeSelectionRange}
-        onSaveNote={async (data) => {
-          await saveNote(data);
-        }}
-      />
-
       {/* Watermark for Accountability Deterrence */}
       <Watermark />
 
       {/* Reading Article */}
-      <main 
+      <main
         className={`${maxWidthClass} mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-28 sm:pb-36 transition-all duration-150`}
         style={{
           fontFamily: `"${settings.fontFamily}", serif`,
@@ -417,8 +349,8 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
               </div>
             </div>
 
-            {/* Paragraphs */}
-            <div 
+            {/* Paragraphs — click anywhere on the text to edit it directly, no selection needed */}
+            <div
               className="reader-prose space-y-5"
               style={{
                 fontSize: `${settings.fontSize}px`,
@@ -427,18 +359,62 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
               }}
             >
               {currentChapter.paragraphs && currentChapter.paragraphs.length > 0 ? (
-                currentChapter.paragraphs.map((p, idx) => (
-                  <p
-                    key={idx}
-                    data-paragraph-index={idx}
-                    data-original-text={p}
-                    onClick={(e) => handleParagraphClick(e, idx, p)}
-                    className={`cursor-text rounded-md transition hover:bg-purple-500/5 ${settings.firstLineIndent ? 'indent-6' : ''}`}
-                    style={{ marginBottom: `${(settings.paragraphSpacing - 1) * 1.5}rem` }}
-                  >
-                    {renderParagraphContent(p, idx)}
-                  </p>
-                ))
+                currentChapter.paragraphs.map((p, idx) => {
+                  const paraEdits = edits.filter(e => e.paragraphIndex === idx && e.status === 'ACTIVE');
+                  const isEditing = editingParagraphIndex === idx;
+
+                  return (
+                    <div key={idx} data-paragraph-index={idx} data-original-text={p}>
+                      {isEditing ? (
+                        <textarea
+                          autoFocus
+                          value={editingDraft}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            setEditingDraft(e.target.value);
+                            resizeTextarea(e.currentTarget);
+                          }}
+                          onBlur={() => handleFinishEditing(idx, p, paraEdits)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') e.currentTarget.blur();
+                          }}
+                          ref={resizeTextarea}
+                          rows={1}
+                          className={`w-full resize-none bg-purple-500/5 outline-none ring-2 ring-purple-400/50 rounded-md px-1 -mx-1 ${settings.firstLineIndent ? 'indent-6' : ''}`}
+                          style={{
+                            color: 'inherit',
+                            textAlign: settings.textAlign,
+                            marginBottom: `${(settings.paragraphSpacing - 1) * 1.5}rem`,
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <p
+                            onClick={(e) => handleStartEditing(e, idx, p, paraEdits)}
+                            className={`cursor-text rounded-md transition hover:bg-purple-500/5 ${settings.firstLineIndent ? 'indent-6' : ''}`}
+                            style={{ marginBottom: paraEdits.length > 0 ? undefined : `${(settings.paragraphSpacing - 1) * 1.5}rem` }}
+                          >
+                            {renderParagraphContent(p, paraEdits)}
+                          </p>
+                          {paraEdits.length > 0 && viewMode === 'working' && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                paraEdits.forEach(edit => revertEdit(edit));
+                              }}
+                              className="mt-0.5 text-[10px] text-ink-400 hover:text-rose-600 font-sans font-medium inline-flex items-center gap-0.5 transition"
+                              style={{ marginBottom: `${(settings.paragraphSpacing - 1) * 1.5}rem` }}
+                            >
+                              <RotateCcw className="w-2.5 h-2.5" />
+                              Khôi phục nguyên văn
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
                 <p className="text-center opacity-50 italic text-sm py-12">
                   Chương này chưa có nội dung văn bản.
@@ -447,7 +423,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
             </div>
 
             {/* Chapter Completion Section */}
-            <div 
+            <div
               className="pt-12 pb-6 border-t border-ink-200/40 space-y-6 text-center font-sans"
               onClick={(e) => e.stopPropagation()}
             >

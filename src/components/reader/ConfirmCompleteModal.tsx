@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, Edit3, MessageSquare, Check, Trash2, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Edit3, Check, Trash2, Loader2 } from 'lucide-react';
 import { useReader } from '../../context/ReaderContext';
 import { DraftStore, EditDraft } from '../../beta-edit/draftStore';
 
@@ -12,7 +12,6 @@ export const ConfirmCompleteModal: React.FC = () => {
     currentChapter, 
     markCurrentChapterCompleted,
     edits,
-    notes,
     isAutosaving,
     isEditSaving,
     editSaveError,
@@ -69,16 +68,11 @@ export const ConfirmCompleteModal: React.FC = () => {
             {currentChapter?.title}
           </p>
 
-          {/* Edit and Note summary */}
+          {/* Edit summary */}
           <div className="pt-2 flex items-center justify-center gap-3 text-xs">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 text-purple-800 font-semibold border border-purple-100">
               <Edit3 className="w-3 h-3 text-purple-600" />
               <span>{edits.length} chỉnh sửa</span>
-            </span>
-
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-semibold border border-amber-100">
-              <MessageSquare className="w-3 h-3 text-amber-600" />
-              <span>{notes.length} ghi chú</span>
             </span>
           </div>
 
