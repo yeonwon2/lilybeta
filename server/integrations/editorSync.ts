@@ -50,6 +50,7 @@ async function syncTransaction(tx: DatabaseAdapter, input: SyncInput) {
   const now = new Date().toISOString();
   let link = await tx.queryOne<any>('SELECT * FROM editor_book_links WHERE editor_source = ? AND editor_book_id = ?', editorSource, input.editorBookId);
   let createdBook = false;
+  if (!link && input.rulesOnly) throw new SyncError(404, 'SOURCE_BOOK_NOT_SYNCED', 'Truyện chưa được gửi sang LilyBeta. Hãy gửi ít nhất một chương trước.');
   if (!link) {
     // Never attach by title or accept a client-supplied betaBookId. Manual books remain independent.
     const betaBookId = `book-${randomUUID()}`;
@@ -68,6 +69,12 @@ async function syncTransaction(tx: DatabaseAdapter, input: SyncInput) {
   }
   if (input.book.contextualPronounRules !== undefined) {
     await tx.run('UPDATE beta_books SET contextual_pronoun_rules = ? WHERE id = ?', JSON.stringify(input.book.contextualPronounRules), book.id);
+  }
+  if (input.rulesOnly) {
+    const totals = await tx.queryOne<any>('SELECT COUNT(*) AS count FROM beta_chapters WHERE book_id = ?', book.id);
+    await tx.run('UPDATE beta_books SET updated_at = ? WHERE id = ?', now, book.id);
+    await tx.run('UPDATE editor_book_links SET last_synced_at = ?, updated_at = ? WHERE id = ?', now, now, link.id);
+    return { betaBookId: book.id as string, createdBook: false, sourceType: 'EDITOR_SYNC', rulesUpdated: true, totalChapters: Number(totals.count), results: [] };
   }
   const mappings = await tx.queryAll<any>(`SELECT l.*, c.chapter_index, c.content_version, c.content_hash
     FROM editor_chapter_links l JOIN beta_chapters c ON c.id = l.beta_chapter_id WHERE l.book_link_id = ?`, link.id);

@@ -97,6 +97,12 @@ try {
   const storedRules = await queryOne<any>('SELECT pronoun_rules, contextual_pronoun_rules FROM beta_books WHERE id = ?', first.betaBookId);
   check(JSON.parse(storedRules.pronoun_rules)[0].name === 'Đổi ngôi' && JSON.parse(storedRules.contextual_pronoun_rules)[0].listener === 'B', 'Editor pronoun tables are stored at book level');
   const firstIds = first.results.map((c: any) => c.betaChapterId);
+  const rulesOnly = await request('/integrations/editor/sync', secret, { editorBookId: 'source-book', rulesOnly: true, book: { title: 'Truyện từ Editor', pronounRules: [{ name: 'Cập nhật', from_words: ['Ta'], to_words: ['Mình'] }], contextualPronounRules: pairRules }, chapters: [] });
+  check(rulesOnly.rulesUpdated === true && rulesOnly.results.length === 0, 'Rules-only sync updates book context without sending chapters');
+  const rulesOnlyStored = await queryOne<any>('SELECT pronoun_rules FROM beta_books WHERE id = ?', first.betaBookId);
+  check(JSON.parse(rulesOnlyStored.pronoun_rules)[0].to_words[0] === 'Mình', 'Rules-only sync persists the updated rule table');
+  await request('/integrations/editor/sync', secret, { editorBookId: 'never-sent', rulesOnly: true, book: { title: 'Chưa gửi', pronounRules: generalRules }, chapters: [] }, 404);
+  check(!(await queryOne("SELECT id FROM editor_book_links WHERE editor_book_id = 'never-sent'")), 'Rules-only sync cannot create an empty book before first chapter sync');
   const again = await request('/integrations/editor/sync', secret, payload(Array.from({ length: 20 }, (_, i) => ch(`chapter-${i + 1}`, i + 1))));
   check(again.results.every((c: any) => c.status === 'ALREADY_SYNCED' && c.contentVersion === 1) && again.betaBookId === first.betaBookId, 'Duplicate batch is idempotent with no version bump');
   const overlap = await request('/integrations/editor/sync', secret, payload(Array.from({ length: 11 }, (_, i) => ch(`chapter-${i + 15}`, i + 15))));

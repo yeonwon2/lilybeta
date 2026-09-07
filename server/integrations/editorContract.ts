@@ -16,6 +16,7 @@ export interface SourceChapter {
 export interface SyncInput {
   editorBookId: string;
   overwriteExisting: boolean;
+  rulesOnly: boolean;
   book: {
     title: string;
     author: string;
@@ -69,6 +70,8 @@ export function parseSyncInput(value: any): SyncInput {
   const editorBookId = text(value.editorBookId, 'editorBookId', 200);
   if (value.overwriteExisting !== undefined && typeof value.overwriteExisting !== 'boolean') invalid('overwriteExisting không hợp lệ');
   const overwriteExisting = value.overwriteExisting === true;
+  if (value.rulesOnly !== undefined && typeof value.rulesOnly !== 'boolean') invalid('rulesOnly không hợp lệ');
+  const rulesOnly = value.rulesOnly === true;
   const book = {
     title: text(value.book?.title, 'book.title', 500),
     author: value.book?.author === undefined ? 'Chưa rõ tác giả' : text(value.book.author, 'book.author', 300),
@@ -77,7 +80,8 @@ export function parseSyncInput(value: any): SyncInput {
     contextualPronounRules: parseContextualPronounRules(value.book?.contextualPronounRules),
   };
   if (book.totalChapters !== undefined && (!Number.isSafeInteger(book.totalChapters) || book.totalChapters < 1 || book.totalChapters > 100_000)) invalid('totalChapters không hợp lệ');
-  if (!Array.isArray(value.chapters) || value.chapters.length < 1 || value.chapters.length > MAX_SYNC_CHAPTERS) invalid(`Mỗi batch cần 1–${MAX_SYNC_CHAPTERS} chương`);
+  if (!Array.isArray(value.chapters) || (!rulesOnly && value.chapters.length < 1) || value.chapters.length > MAX_SYNC_CHAPTERS || (rulesOnly && value.chapters.length !== 0)) invalid(rulesOnly ? 'Gửi riêng quy tắc không được kèm chương' : `Mỗi batch cần 1–${MAX_SYNC_CHAPTERS} chương`);
+  if (rulesOnly && book.pronounRules === undefined && book.contextualPronounRules === undefined) invalid('Cần ít nhất một bảng quy tắc để cập nhật');
   const ids = new Set<string>();
   const indexes = new Set<number>();
   const chapters = value.chapters.map((c: any): SourceChapter => {
@@ -99,5 +103,5 @@ export function parseSyncInput(value: any): SyncInput {
     if (c.contentHash !== undefined && c.contentHash !== hash) throw new SyncError(400, 'CONTENT_HASH_MISMATCH', 'Hash nguồn không khớp hash LilyBeta tính lại');
     return { editorChapterId: id, chapterIndex: c.chapterIndex, title, paragraphs: c.paragraphs, updatedAt: new Date(c.updatedAt).toISOString(), sourceVersion: version, contentHash: hash };
   });
-  return { editorBookId, overwriteExisting, book, chapters: chapters.sort((a: SourceChapter, b: SourceChapter) => a.chapterIndex - b.chapterIndex) };
+  return { editorBookId, overwriteExisting, rulesOnly, book, chapters: chapters.sort((a: SourceChapter, b: SourceChapter) => a.chapterIndex - b.chapterIndex) };
 }
