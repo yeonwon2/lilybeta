@@ -35,6 +35,8 @@ export const listBooks = async (req: Request, res: Response): Promise<void> => {
       b.cover_color AS coverColor,
       b.total_chapters AS totalChapters,
       b.word_count AS wordCount,
+      b.pronoun_rules AS pronounRules,
+      b.contextual_pronoun_rules AS contextualPronounRules,
       b.file_format AS fileFormat,
       b.status,
       b.created_at AS createdAt,
@@ -68,6 +70,8 @@ export const getBook = async (req: Request, res: Response): Promise<void> => {
       b.file_format AS fileFormat,
       b.total_chapters AS totalChapters,
       b.word_count AS wordCount,
+      b.pronoun_rules AS pronounRules,
+      b.contextual_pronoun_rules AS contextualPronounRules,
       b.status,
       b.created_at AS createdAt,
       b.updated_at AS updatedAt
@@ -110,6 +114,8 @@ export const getBook = async (req: Request, res: Response): Promise<void> => {
   res.json({
     book: {
       ...book,
+      pronounRules: parseRules(book.pronounRules),
+      contextualPronounRules: parseRules(book.contextualPronounRules),
       currentChapter: progress?.currentChapter || 1,
       progressPercent: progress?.progressPercent || 0,
       completedChaptersCount: progress?.completedChaptersCount || 0,
@@ -117,6 +123,12 @@ export const getBook = async (req: Request, res: Response): Promise<void> => {
       progress: progress || null,
     },
   });
+};
+
+const parseRules = (value: unknown): unknown[] => {
+  if (Array.isArray(value)) return value;
+  try { return typeof value === 'string' ? JSON.parse(value) : []; }
+  catch { return []; }
 };
 
 export const getChapterList = async (req: Request, res: Response): Promise<void> => {

@@ -39,6 +39,8 @@ export interface Book {
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
+  pronounRules?: Array<{ name: string; from_words: string[]; to_words: string[] }>;
+  contextualPronounRules?: Array<{ speaker: string; listener: string; self_word: string; target_word: string; note?: string }>;
   
   // Reading & Workflow metadata
   currentChapter?: number;

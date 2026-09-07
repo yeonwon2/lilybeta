@@ -63,6 +63,12 @@ async function syncTransaction(tx: DatabaseAdapter, input: SyncInput) {
   // Also blocks a concurrent assignment FK insert until this sync commits.
   const book = await tx.queryOne<any>(`SELECT id FROM beta_books WHERE id = ?${tx.provider === 'postgres' ? ' FOR UPDATE' : ''}`, link.beta_book_id);
   if (!book) throw new SyncError(409, 'SOURCE_BOOK_REMOVED', 'Truyện đích đã bị xóa');
+  if (input.book.pronounRules !== undefined) {
+    await tx.run('UPDATE beta_books SET pronoun_rules = ? WHERE id = ?', JSON.stringify(input.book.pronounRules), book.id);
+  }
+  if (input.book.contextualPronounRules !== undefined) {
+    await tx.run('UPDATE beta_books SET contextual_pronoun_rules = ? WHERE id = ?', JSON.stringify(input.book.contextualPronounRules), book.id);
+  }
   const mappings = await tx.queryAll<any>(`SELECT l.*, c.chapter_index, c.content_version, c.content_hash
     FROM editor_chapter_links l JOIN beta_chapters c ON c.id = l.beta_chapter_id WHERE l.book_link_id = ?`, link.id);
   const byId = new Map(mappings.map(m => [m.editor_chapter_id, m]));

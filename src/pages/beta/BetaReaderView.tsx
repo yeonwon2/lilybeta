@@ -7,6 +7,7 @@ import {
   Check,
   ShieldAlert,
   RotateCcw,
+  ListChecks,
 } from 'lucide-react';
 import { ReaderProvider, useReader } from '../../context/ReaderContext';
 import { ReaderToolbar } from '../../components/reader/ReaderToolbar';
@@ -17,6 +18,7 @@ import { ConfirmCompleteModal } from '../../components/reader/ConfirmCompleteMod
 import { Watermark } from '../../components/reader/Watermark';
 import { applyEditsToParagraph } from '../../beta-edit/applyEdits';
 import { BetaEdit } from '../../beta-edit/editTypes';
+import { PronounRulesDialog } from '../../components/reader/PronounRulesDialog';
 
 export interface BetaReaderViewProps {
   bookId: string;
@@ -67,6 +69,7 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
   const lastScrollYRef = useRef<number>(0);
   const [editingParagraphIndex, setEditingParagraphIndex] = useState<number | null>(null);
   const [editingDraft, setEditingDraft] = useState<string>('');
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
 
   // Initialize reader for book and chapter
   useEffect(() => {
@@ -303,6 +306,19 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
       <ThemeSelectorSheet />
       <TocDrawer />
       <ConfirmCompleteModal />
+      {book && <PronounRulesDialog open={isRulesOpen} onClose={() => setIsRulesOpen(false)} book={book} />}
+
+      {book && currentChapter && (
+        <button
+          type="button"
+          onClick={(event) => { event.stopPropagation(); setIsRulesOpen(true); }}
+          className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 inline-flex flex-col items-center gap-1 rounded-2xl border border-violet-200 bg-white/95 px-3 py-3 text-[11px] font-bold text-violet-800 shadow-lg backdrop-blur hover:bg-violet-50"
+          title="Xem quy tắc xưng hô của truyện"
+        >
+          <ListChecks className="h-5 w-5" />
+          <span>Quy tắc</span>
+        </button>
+      )}
 
       {/* Watermark for Accountability Deterrence */}
       <Watermark />

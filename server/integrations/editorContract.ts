@@ -16,9 +16,17 @@ export interface SourceChapter {
 export interface SyncInput {
   editorBookId: string;
   overwriteExisting: boolean;
-  book: { title: string; author: string; totalChapters?: number };
+  book: {
+    title: string;
+    author: string;
+    totalChapters?: number;
+    pronounRules?: PronounRule[];
+    contextualPronounRules?: ContextualPronounRule[];
+  };
   chapters: SourceChapter[];
 }
+export interface PronounRule { name: string; from_words: string[]; to_words: string[]; }
+export interface ContextualPronounRule { speaker: string; listener: string; self_word: string; target_word: string; note: string; }
 export function sourceHash(title: string, paragraphs: string[]): string {
   return createHash('sha256').update(JSON.stringify({ title, paragraphs })).digest('hex');
 }
@@ -26,6 +34,35 @@ function invalid(message: string): never { throw new SyncError(400, 'INVALID_SYN
 function text(value: unknown, label: string, max: number): string {
   if (typeof value !== 'string' || !value.trim() || value.length > max) invalid(`${label} không hợp lệ`);
   return value.trim();
+}
+function optionalText(value: unknown, label: string, max: number): string {
+  if (value === undefined || value === null) return '';
+  if (typeof value !== 'string' || value.length > max) invalid(`${label} không hợp lệ`);
+  return value.trim();
+}
+function wordList(value: unknown, label: string): string[] {
+  if (!Array.isArray(value) || value.length > 100 || !value.every(item => typeof item === 'string' && item.trim() && item.length <= 100)) invalid(`${label} không hợp lệ`);
+  return value.map(item => item.trim());
+}
+function parsePronounRules(value: unknown): PronounRule[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length > 500) invalid('book.pronounRules không hợp lệ');
+  return value.map((rule: any) => ({
+    name: text(rule?.name, 'pronounRules.name', 200),
+    from_words: wordList(rule?.from_words, 'pronounRules.from_words'),
+    to_words: wordList(rule?.to_words, 'pronounRules.to_words'),
+  }));
+}
+function parseContextualPronounRules(value: unknown): ContextualPronounRule[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length > 1_000) invalid('book.contextualPronounRules không hợp lệ');
+  return value.map((rule: any) => ({
+    speaker: text(rule?.speaker, 'contextualPronounRules.speaker', 200),
+    listener: optionalText(rule?.listener, 'contextualPronounRules.listener', 200) || '*',
+    self_word: text(rule?.self_word, 'contextualPronounRules.self_word', 100),
+    target_word: text(rule?.target_word, 'contextualPronounRules.target_word', 100),
+    note: optionalText(rule?.note, 'contextualPronounRules.note', 500),
+  }));
 }
 export function parseSyncInput(value: any): SyncInput {
   if (!value || typeof value !== 'object') invalid('Thiếu payload');
@@ -36,6 +73,8 @@ export function parseSyncInput(value: any): SyncInput {
     title: text(value.book?.title, 'book.title', 500),
     author: value.book?.author === undefined ? 'Chưa rõ tác giả' : text(value.book.author, 'book.author', 300),
     totalChapters: value.book?.totalChapters,
+    pronounRules: parsePronounRules(value.book?.pronounRules),
+    contextualPronounRules: parseContextualPronounRules(value.book?.contextualPronounRules),
   };
   if (book.totalChapters !== undefined && (!Number.isSafeInteger(book.totalChapters) || book.totalChapters < 1 || book.totalChapters > 100_000)) invalid('totalChapters không hợp lệ');
   if (!Array.isArray(value.chapters) || value.chapters.length < 1 || value.chapters.length > MAX_SYNC_CHAPTERS) invalid(`Mỗi batch cần 1–${MAX_SYNC_CHAPTERS} chương`);
