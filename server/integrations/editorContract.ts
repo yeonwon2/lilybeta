@@ -22,11 +22,13 @@ export interface SyncInput {
     author: string;
     totalChapters?: number;
     pronounRules?: PronounRule[];
+    narrativePronounRules?: NarrativePronounRule[];
     contextualPronounRules?: ContextualPronounRule[];
   };
   chapters: SourceChapter[];
 }
 export interface PronounRule { name: string; from_words: string[]; to_words: string[]; }
+export interface NarrativePronounRule { character: string; pronoun: string; note: string; }
 export interface ContextualPronounRule { speaker: string; listener: string; self_word: string; target_word: string; note: string; }
 export function sourceHash(title: string, paragraphs: string[]): string {
   return createHash('sha256').update(JSON.stringify({ title, paragraphs })).digest('hex');
@@ -65,6 +67,15 @@ function parseContextualPronounRules(value: unknown): ContextualPronounRule[] | 
     note: optionalText(rule?.note, 'contextualPronounRules.note', 500),
   }));
 }
+function parseNarrativePronounRules(value: unknown): NarrativePronounRule[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length > 1_000) invalid('book.narrativePronounRules không hợp lệ');
+  return value.map((rule: any) => ({
+    character: text(rule?.character, 'narrativePronounRules.character', 200),
+    pronoun: text(rule?.pronoun, 'narrativePronounRules.pronoun', 100),
+    note: optionalText(rule?.note, 'narrativePronounRules.note', 500),
+  }));
+}
 export function parseSyncInput(value: any): SyncInput {
   if (!value || typeof value !== 'object') invalid('Thiếu payload');
   const editorBookId = text(value.editorBookId, 'editorBookId', 200);
@@ -77,11 +88,12 @@ export function parseSyncInput(value: any): SyncInput {
     author: value.book?.author === undefined ? 'Chưa rõ tác giả' : text(value.book.author, 'book.author', 300),
     totalChapters: value.book?.totalChapters,
     pronounRules: parsePronounRules(value.book?.pronounRules),
+    narrativePronounRules: parseNarrativePronounRules(value.book?.narrativePronounRules),
     contextualPronounRules: parseContextualPronounRules(value.book?.contextualPronounRules),
   };
   if (book.totalChapters !== undefined && (!Number.isSafeInteger(book.totalChapters) || book.totalChapters < 1 || book.totalChapters > 100_000)) invalid('totalChapters không hợp lệ');
   if (!Array.isArray(value.chapters) || (!rulesOnly && value.chapters.length < 1) || value.chapters.length > MAX_SYNC_CHAPTERS || (rulesOnly && value.chapters.length !== 0)) invalid(rulesOnly ? 'Gửi riêng quy tắc không được kèm chương' : `Mỗi batch cần 1–${MAX_SYNC_CHAPTERS} chương`);
-  if (rulesOnly && book.pronounRules === undefined && book.contextualPronounRules === undefined) invalid('Cần ít nhất một bảng quy tắc để cập nhật');
+  if (rulesOnly && book.pronounRules === undefined && book.narrativePronounRules === undefined && book.contextualPronounRules === undefined) invalid('Cần ít nhất một bảng quy tắc để cập nhật');
   const ids = new Set<string>();
   const indexes = new Set<number>();
   const chapters = value.chapters.map((c: any): SourceChapter => {

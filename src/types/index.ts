@@ -40,6 +40,7 @@ export interface Book {
   createdAt: string;
   updatedAt: string;
   pronounRules?: Array<{ name: string; from_words: string[]; to_words: string[] }>;
+  narrativePronounRules?: Array<{ character: string; pronoun: string; note?: string }>;
   contextualPronounRules?: Array<{ speaker: string; listener: string; self_word: string; target_word: string; note?: string }>;
   
   // Reading & Workflow metadata

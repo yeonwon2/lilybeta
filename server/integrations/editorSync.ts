@@ -67,6 +67,9 @@ async function syncTransaction(tx: DatabaseAdapter, input: SyncInput) {
   if (input.book.pronounRules !== undefined) {
     await tx.run('UPDATE beta_books SET pronoun_rules = ? WHERE id = ?', JSON.stringify(input.book.pronounRules), book.id);
   }
+  if (input.book.narrativePronounRules !== undefined) {
+    await tx.run('UPDATE beta_books SET narrative_pronoun_rules = ? WHERE id = ?', JSON.stringify(input.book.narrativePronounRules), book.id);
+  }
   if (input.book.contextualPronounRules !== undefined) {
     await tx.run('UPDATE beta_books SET contextual_pronoun_rules = ? WHERE id = ?', JSON.stringify(input.book.contextualPronounRules), book.id);
   }

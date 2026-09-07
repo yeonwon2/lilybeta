@@ -11,6 +11,7 @@ interface Props {
 export const PronounRulesDialog: React.FC<Props> = ({ open, onClose, book }) => {
   if (!open) return null;
   const general = book.pronounRules || [];
+  const narrative = book.narrativePronounRules || [];
   const pairs = book.contextualPronounRules || [];
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4 font-sans" role="dialog" aria-modal="true" aria-labelledby="pronoun-rules-title" onClick={onClose}>
@@ -24,7 +25,19 @@ export const PronounRulesDialog: React.FC<Props> = ({ open, onClose, book }) => 
         </div>
 
         <section className="mt-5 space-y-3">
-          <h3 className="font-bold text-violet-800">Bảng quy tắc chung</h3>
+          <h3 className="font-bold text-violet-800">Ngôi lời dẫn</h3>
+          {!narrative.length ? <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">Không có ngôi lời dẫn được gửi từ Editor.</p> : (
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full min-w-[480px] text-left text-xs">
+                <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Nhân vật</th><th className="p-3">Ngôi lời dẫn</th><th className="p-3">Ghi chú</th></tr></thead>
+                <tbody>{narrative.map((rule, index) => <tr key={`${rule.character}-${index}`} className="border-t border-slate-100"><td className="p-3 font-semibold">{rule.character}</td><td className="p-3">{rule.pronoun}</td><td className="p-3 text-slate-500">{rule.note || '—'}</td></tr>)}</tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {!!general.length && <section className="mt-6 space-y-3">
+          <h3 className="font-bold text-violet-800">Quy tắc thay thế chung</h3>
           {!general.length ? <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">Không có quy tắc chung được gửi từ Editor.</p> : general.map((rule, index) => (
             <div key={`${rule.name}-${index}`} className="rounded-xl border border-violet-100 bg-violet-50/50 p-3">
               <p className="text-sm font-semibold">{rule.name}</p>
@@ -32,7 +45,7 @@ export const PronounRulesDialog: React.FC<Props> = ({ open, onClose, book }) => 
               <p className="mt-1 text-xs text-slate-700"><span className="font-medium">Dùng:</span> {rule.to_words.join(', ') || '—'}</p>
             </div>
           ))}
-        </section>
+        </section>}
 
         <section className="mt-6 space-y-3">
           <h3 className="font-bold text-violet-800">Xưng hô đôi A–B</h3>

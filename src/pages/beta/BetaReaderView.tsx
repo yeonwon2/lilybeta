@@ -70,6 +70,35 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
   const [editingParagraphIndex, setEditingParagraphIndex] = useState<number | null>(null);
   const [editingDraft, setEditingDraft] = useState<string>('');
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [rulesButtonPosition, setRulesButtonPosition] = useState<{ x: number; y: number } | null>(() => {
+    try { return JSON.parse(localStorage.getItem('lilybeta_rules_button_position') || 'null'); } catch { return null; }
+  });
+  const rulesDragRef = useRef<{ offsetX: number; offsetY: number; moved: boolean } | null>(null);
+  const suppressRulesClickRef = useRef(false);
+
+  const moveRulesButton = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const drag = rulesDragRef.current;
+    if (!drag) return;
+    drag.moved = true;
+    const width = event.currentTarget.offsetWidth;
+    const height = event.currentTarget.offsetHeight;
+    setRulesButtonPosition({
+      x: Math.max(6, Math.min(window.innerWidth - width - 6, event.clientX - drag.offsetX)),
+      y: Math.max(6, Math.min(window.innerHeight - height - 6, event.clientY - drag.offsetY)),
+    });
+  };
+
+  const finishRulesButtonDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const drag = rulesDragRef.current;
+    if (!drag) return;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    suppressRulesClickRef.current = drag.moved;
+    rulesDragRef.current = null;
+    setRulesButtonPosition(position => {
+      if (position) localStorage.setItem('lilybeta_rules_button_position', JSON.stringify(position));
+      return position;
+    });
+  };
 
   // Initialize reader for book and chapter
   useEffect(() => {
@@ -311,11 +340,25 @@ const BetaReaderViewContent: React.FC<BetaReaderViewProps> = ({
       {book && currentChapter && (
         <button
           type="button"
-          onClick={(event) => { event.stopPropagation(); setIsRulesOpen(true); }}
-          className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 inline-flex flex-col items-center gap-1 rounded-2xl border border-violet-200 bg-white/95 px-3 py-3 text-[11px] font-bold text-violet-800 shadow-lg backdrop-blur hover:bg-violet-50"
-          title="Xem quy tắc xưng hô của truyện"
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            const rect = event.currentTarget.getBoundingClientRect();
+            rulesDragRef.current = { offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, moved: false };
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={moveRulesButton}
+          onPointerUp={finishRulesButtonDrag}
+          onPointerCancel={finishRulesButtonDrag}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (suppressRulesClickRef.current) { suppressRulesClickRef.current = false; return; }
+            setIsRulesOpen(true);
+          }}
+          className={`fixed z-40 inline-flex touch-none cursor-move items-center gap-1 rounded-full border border-violet-200 bg-white/95 px-2.5 py-2 text-[10px] font-bold text-violet-800 shadow-md backdrop-blur hover:bg-violet-50 ${rulesButtonPosition ? '' : 'right-2 top-1/2 -translate-y-1/2'}`}
+          style={rulesButtonPosition ? { left: rulesButtonPosition.x, top: rulesButtonPosition.y } : undefined}
+          title="Bấm để xem, kéo để đổi vị trí"
         >
-          <ListChecks className="h-5 w-5" />
+          <ListChecks className="h-4 w-4" />
           <span>Quy tắc</span>
         </button>
       )}

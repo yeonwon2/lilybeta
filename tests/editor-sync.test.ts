@@ -41,8 +41,9 @@ const timestamp = (n: number) => new Date(Date.now() - 100_000 + n * 1000).toISO
 const stamp = timestamp(0);
 const ch = (id: string, index: number, content = 'Hắn nhìn nàng.', updatedAt = stamp) => ({ editorChapterId: id, chapterIndex: index, title: `Chương ${index}`, paragraphs: [content], sourceVersion: updatedAt, updatedAt });
 const generalRules = [{ name: 'Đổi ngôi', from_words: ['Ta'], to_words: ['Tôi'] }];
+const narrativeRules = [{ character: 'A', pronoun: 'nàng', note: 'lời dẫn' }];
 const pairRules = [{ speaker: 'A', listener: 'B', self_word: 'ta', target_word: 'ngươi', note: 'khi riêng tư' }];
-const payload = (chapters: any[], id = 'source-book', total = 30, overwriteExisting = false) => ({ editorBookId: id, overwriteExisting, book: { title: 'Truyện từ Editor', author: 'Tác giả', totalChapters: total, pronounRules: generalRules, contextualPronounRules: pairRules }, chapters });
+const payload = (chapters: any[], id = 'source-book', total = 30, overwriteExisting = false) => ({ editorBookId: id, overwriteExisting, book: { title: 'Truyện từ Editor', author: 'Tác giả', totalChapters: total, pronounRules: generalRules, narrativePronounRules: narrativeRules, contextualPronounRules: pairRules }, chapters });
 async function workflow(bookId: string, admin: string, beta: string, userId: string) {
   const assignment = (await request(`/admin/books/${bookId}/assign`, admin, { betaUserId: userId })).assignment;
   await request(`/books/${bookId}/chapters/1`, beta);
@@ -94,8 +95,8 @@ try {
   check(true, 'Integration token and browser JWT scopes are separate');
   const first = await request('/integrations/editor/sync', secret, payload(Array.from({ length: 20 }, (_, i) => ch(`chapter-${i + 1}`, i + 1))));
   check(first.createdBook && first.totalChapters === 20 && first.syncState === 'PARTIAL', 'First partial sync creates exactly selected chapters');
-  const storedRules = await queryOne<any>('SELECT pronoun_rules, contextual_pronoun_rules FROM beta_books WHERE id = ?', first.betaBookId);
-  check(JSON.parse(storedRules.pronoun_rules)[0].name === 'Đổi ngôi' && JSON.parse(storedRules.contextual_pronoun_rules)[0].listener === 'B', 'Editor pronoun tables are stored at book level');
+  const storedRules = await queryOne<any>('SELECT pronoun_rules, narrative_pronoun_rules, contextual_pronoun_rules FROM beta_books WHERE id = ?', first.betaBookId);
+  check(JSON.parse(storedRules.pronoun_rules)[0].name === 'Đổi ngôi' && JSON.parse(storedRules.narrative_pronoun_rules)[0].pronoun === 'nàng' && JSON.parse(storedRules.contextual_pronoun_rules)[0].listener === 'B', 'Editor pronoun tables are stored at book level');
   const firstIds = first.results.map((c: any) => c.betaChapterId);
   const rulesOnly = await request('/integrations/editor/sync', secret, { editorBookId: 'source-book', rulesOnly: true, book: { title: 'Truyện từ Editor', pronounRules: [{ name: 'Cập nhật', from_words: ['Ta'], to_words: ['Mình'] }], contextualPronounRules: pairRules }, chapters: [] });
   check(rulesOnly.rulesUpdated === true && rulesOnly.results.length === 0, 'Rules-only sync updates book context without sending chapters');
@@ -147,7 +148,7 @@ try {
   // New source enters precisely the existing workflow.
   await workflow(first.betaBookId, admin, beta, user.id);
   const visibleBook = (await request(`/books/${first.betaBookId}`, beta)).book;
-  check(visibleBook.pronounRules[0].to_words[0] === 'Tôi' && visibleBook.contextualPronounRules[0].target_word === 'ngươi', 'Assigned Beta reader can load both rule tables with book metadata');
+  check(visibleBook.pronounRules[0].to_words[0] === 'Tôi' && visibleBook.narrativePronounRules[0].pronoun === 'nàng' && visibleBook.contextualPronounRules[0].target_word === 'ngươi', 'Assigned Beta reader can load all rule tables with book metadata');
   const sourceBefore = JSON.stringify(await queryAll('SELECT * FROM beta_chapters WHERE book_id = ?', first.betaBookId));
   const editsBefore = JSON.stringify(await queryAll('SELECT * FROM beta_edits WHERE book_id = ?', first.betaBookId));
   const reviewsBefore = JSON.stringify(await queryAll('SELECT * FROM beta_chapter_reviews WHERE book_id = ?', first.betaBookId));
@@ -223,7 +224,7 @@ try {
     const env = { NODE_ENV: 'test', LILYBETA_SYNC_SECRET: secret, LILYBETA_SYNC_USER_IDS: userId, SUPABASE_URL: 'https://editor-test.invalid', SUPABASE_ANON_KEY: 'synthetic-anon', LILYBETA_API_URL: base.replace('/api', '') };
     const handler = createLilyBetaSyncHandler({ env, fetchImpl: async (url: string, opts: any) => {
       if (url.startsWith(env.SUPABASE_URL)) {
-        const data = url.includes('/auth/') ? { id: userId } : url.includes('/projects?') ? [{ id: projectId, title: 'Editor round trip', pronoun_rules: generalRules, contextual_pronoun_rules: pairRules }] : [{ id: chapterId, title: 'Chương round trip', chapter_order: 0.5, updated_date: stamp, edited: 'Hắn nhìn nàng.\nĐoạn hai.' }];
+        const data = url.includes('/auth/') ? { id: userId } : url.includes('/projects?') ? [{ id: projectId, title: 'Editor round trip', pronoun_rules: generalRules, contextual_pronoun_rules: pairRules, style_toggles: { story_memory: { narrativeRules } } }] : [{ id: chapterId, title: 'Chương round trip', chapter_order: 0.5, updated_date: stamp, edited: 'Hắn nhìn nàng.\nĐoạn hai.' }];
         return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
       }
       return fetch(url, opts);
@@ -232,8 +233,8 @@ try {
     const res = { setHeader() {}, status(n: number) { status = n; return this; }, json(data: any) { output = data; return this; } };
     await handler({ method: 'POST', headers: { authorization: 'Bearer synthetic-editor-jwt' }, body: { projectId, action: 'batch', chapterIds: [chapterId] } }, res);
     check(status === 200 && output.results[0].status === 'CREATED', 'Editor server → real LilyBeta API round trip creates selected chapter');
-    const roundTripBook = await queryOne<any>('SELECT pronoun_rules, contextual_pronoun_rules FROM beta_books WHERE id = ?', output.betaBookId);
-    check(JSON.parse(roundTripBook.pronoun_rules)[0].name === 'Đổi ngôi' && JSON.parse(roundTripBook.contextual_pronoun_rules)[0].speaker === 'A', 'Editor server → LilyBeta preserves both pronoun tables end to end');
+    const roundTripBook = await queryOne<any>('SELECT pronoun_rules, narrative_pronoun_rules, contextual_pronoun_rules FROM beta_books WHERE id = ?', output.betaBookId);
+    check(JSON.parse(roundTripBook.pronoun_rules)[0].name === 'Đổi ngôi' && JSON.parse(roundTripBook.narrative_pronoun_rules)[0].pronoun === 'nàng' && JSON.parse(roundTripBook.contextual_pronoun_rules)[0].speaker === 'A', 'Editor server → LilyBeta preserves all pronoun tables end to end');
     await handler({ method: 'POST', headers: { authorization: 'Bearer synthetic-editor-jwt' }, body: { projectId, action: 'plan' } }, res);
     check(status === 200 && output.chapters[0].changed === false, 'Editor plan reads server checkpoint and skips already-synced chapter');
   }

@@ -36,6 +36,7 @@ export const listBooks = async (req: Request, res: Response): Promise<void> => {
       b.total_chapters AS totalChapters,
       b.word_count AS wordCount,
       b.pronoun_rules AS pronounRules,
+      b.narrative_pronoun_rules AS narrativePronounRules,
       b.contextual_pronoun_rules AS contextualPronounRules,
       b.file_format AS fileFormat,
       b.status,
@@ -71,6 +72,7 @@ export const getBook = async (req: Request, res: Response): Promise<void> => {
       b.total_chapters AS totalChapters,
       b.word_count AS wordCount,
       b.pronoun_rules AS pronounRules,
+      b.narrative_pronoun_rules AS narrativePronounRules,
       b.contextual_pronoun_rules AS contextualPronounRules,
       b.status,
       b.created_at AS createdAt,
@@ -115,6 +117,7 @@ export const getBook = async (req: Request, res: Response): Promise<void> => {
     book: {
       ...book,
       pronounRules: parseRules(book.pronounRules),
+      narrativePronounRules: parseRules(book.narrativePronounRules),
       contextualPronounRules: parseRules(book.contextualPronounRules),
       currentChapter: progress?.currentChapter || 1,
       progressPercent: progress?.progressPercent || 0,
