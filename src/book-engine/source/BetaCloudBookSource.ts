@@ -166,7 +166,9 @@ export class BetaCloudBookSource implements BookSource {
     isRead: boolean; 
     isCurrent: boolean;
     status?: string;
+    startedAt?: string;
     completedAt?: string;
+    lastScrollPercent?: number;
     contentVersion?: number;
     updatedAt?: string;
   }>> {

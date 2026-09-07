@@ -380,6 +380,7 @@ const runEgressTests = async () => {
     for (const b of booksList) {
       assert(b.paragraphs === undefined, 'Book item does not contain paragraphs');
       assert(b.chapters === undefined, 'Book item does not contain chapters content');
+      assert(b.pronounRules === undefined && b.narrativePronounRules === undefined && b.contextualPronounRules === undefined, 'Book list excludes rule tables that are only needed after opening one book');
     }
 
     // Rule 2: GET /api/books/:id/chapters không trả paragraphs

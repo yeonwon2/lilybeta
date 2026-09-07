@@ -257,7 +257,9 @@ export const ReaderProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
   }, [flushPendingAutosave]);
 
-  // Load Book & Workflow
+  // Book metadata and the lean TOC are independent, so fetch them together.
+  // The TOC already includes this reader's workflow status; avoid downloading
+  // the same status rows again through /workflow.
   const initReader = async (bookId: string, targetChapter?: number) => {
     setIsLoadingChapter(true);
     setReaderError(null);
@@ -267,7 +269,10 @@ export const ReaderProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
 
     try {
-      const loadedBook = await source.getBook(bookId);
+      const [loadedBook, toc] = await Promise.all([
+        source.getBook(bookId),
+        source.getChapterList(bookId),
+      ]);
       if (!loadedBook) {
         setReaderError('Bạn không có quyền truy cập tác phẩm này hoặc tác phẩm không tồn tại.');
         setIsLoadingChapter(false);
@@ -277,14 +282,14 @@ export const ReaderProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setBook(loadedBook);
       setTotalChapters(loadedBook.totalChapters || 1);
 
-      const [toc, workflow] = await Promise.all([
-        source.getChapterList(bookId),
-        source.getChapterWorkflow(bookId),
-      ]);
-
       setChapterList(toc);
       chapterListRef.current = toc;
-      setWorkflowMap(workflow);
+      setWorkflowMap(Object.fromEntries(toc.map(chapter => [chapter.index, {
+        status: chapter.status || 'NOT_STARTED',
+        startedAt: chapter.startedAt,
+        completedAt: chapter.completedAt,
+        lastScrollPercent: chapter.lastScrollPercent,
+      }])));
 
       const chapterToOpen = targetChapter && targetChapter >= 1 ? targetChapter : (loadedBook.currentChapter || 1);
       await loadChapterInternal(bookId, chapterToOpen, loadedBook.totalChapters || 1, toc);
